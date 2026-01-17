@@ -41,23 +41,27 @@ Husky is configured at the root level of the monorepo and applies hooks to both 
 
 **Purpose**: Offers optional code review with code-simplifier, then runs API end-to-end tests before allowing a push to remote.
 
-**What it does**:
-1. **Interactive Code Review (Optional)**:
+**What it does** (in order):
+1. **Interactive Code Review (Optional - runs FIRST)**:
    - Prompts you to run code review with Claude Code's code-simplifier skill
    - Analyzes your git diff and suggests simplifications
    - You can choose to skip this step by pressing 'N'
-   - If you run the review, you'll be prompted again to continue with the push
+   - If you make changes during review:
+     - You'll be prompted: "Did you make changes that need to be committed?"
+     - If yes: Push aborts, you commit changes and push again (triggers tests on new code)
+     - If no: Continues to tests
 
-2. **E2E Tests (Required)**:
+2. **E2E Tests (Required - runs AFTER code review)**:
    - Executes the full API e2e test suite using Docker
    - Ensures all integration tests pass before code is pushed
-   - Prevents broken code from being pushed to the repository
+   - Tests run on the final code (including any changes from code review)
+   - Prevents broken or untested code from being pushed to the repository
 
 **Manual Code Review**: You can also run code review manually anytime with:
 ```bash
 npm run review
 # or
-./.husky/.husky/scripts/review-changes.sh
+./.husky/scripts/review-changes.sh
 ```
 
 **Note**: This hook can take some time to run as it spins up Docker containers and runs the complete test suite. If you need to push urgently and tests are failing, you can bypass with `git push --no-verify` (not recommended).
@@ -117,11 +121,20 @@ git commit -m "WIP"
 **During Push** (Interactive):
 ```bash
 git push
-# → Prompts: "Run code review? [y/N]"
+# → Step 1: Prompts "Run code review? [y/N]"
 # → If 'y': Launches Claude Code with code-simplifier skill
-# → After review: Prompts "Continue with push? [y/N]"
-# → Runs e2e tests and pushes if all pass
+# → After review: Prompts "Did you make changes that need to be committed? [y/N]"
+#   - If 'y': Aborts push, you commit changes and push again
+#   - If 'n': Continues to tests
+# → Step 2: Runs e2e tests
+# → If tests pass: Pushes to remote
 ```
+
+**Important**: The workflow ensures:
+1. Code review happens FIRST (before tests)
+2. If you make changes during review, you must commit them
+3. Tests run AFTER all changes are committed
+4. This prevents pushing untested code
 
 **Manual Review** (Anytime):
 ```bash

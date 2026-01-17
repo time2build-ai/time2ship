@@ -6,45 +6,56 @@ echo ""
 # Check if there are commits to push
 if git diff --quiet HEAD @{u} 2>/dev/null; then
     echo "No new commits to push."
-else
-    echo "📊 New commits detected!"
-    echo ""
-    echo "Would you like to run code review with code-simplifier before pushing?"
-    echo "(This will analyze your changes and suggest simplifications)"
-    echo ""
-    printf "Run code review? [y/N] "
-
-    # Read user input (only in interactive terminal)
-    if [ -t 0 ]; then
-        read -r response
-        case "$response" in
-            [yY][eE][sS]|[yY])
-                echo ""
-                echo "🤖 Running code review..."
-                .husky/scripts/review-changes.sh
-                echo ""
-                printf "Continue with push? [y/N] "
-                read -r continue_response
-                case "$continue_response" in
-                    [yY][eE][sS]|[yY])
-                        echo "Continuing with push..."
-                        ;;
-                    *)
-                        echo "Push aborted. Make changes and try again."
-                        exit 1
-                        ;;
-                esac
-                ;;
-            *)
-                echo "Skipping code review."
-                ;;
-        esac
-    else
-        echo "Non-interactive terminal. Skipping code review prompt."
-        echo "Run '.husky/scripts/review-changes.sh' manually to review changes."
-    fi
+    exit 0
 fi
 
+echo "📊 New commits detected!"
+echo ""
+
+# Step 1: Offer code review BEFORE running tests
+echo "Would you like to run code review with code-simplifier?"
+echo "(Recommended: Review and improve code before running tests)"
+echo ""
+printf "Run code review? [y/N] "
+
+# Read user input (only in interactive terminal)
+if [ -t 0 ]; then
+    read -r response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            echo ""
+            echo "🤖 Running code review..."
+            .husky/scripts/review-changes.sh
+            echo ""
+            echo "⚠️  If you made changes based on the review:"
+            echo "   1. Stage your changes: git add ."
+            echo "   2. Commit them: git commit -m \"refactor: apply code review suggestions\""
+            echo "   3. Try pushing again"
+            echo ""
+            printf "Did you make changes that need to be committed? [y/N] "
+            read -r made_changes
+            case "$made_changes" in
+                [yY][eE][sS]|[yY])
+                    echo ""
+                    echo "Please commit your changes and push again."
+                    echo "Aborting push..."
+                    exit 1
+                    ;;
+                *)
+                    echo "Continuing with push..."
+                    ;;
+            esac
+            ;;
+        *)
+            echo "Skipping code review."
+            ;;
+    esac
+else
+    echo "Non-interactive terminal. Skipping code review prompt."
+    echo "Run '.husky/scripts/review-changes.sh' manually to review changes."
+fi
+
+# Step 2: Run tests AFTER code review (or if review was skipped)
 echo ""
 echo "🧪 Running API e2e tests..."
 
