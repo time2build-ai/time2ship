@@ -26,6 +26,7 @@ const envSchema = z.object({
   EMAIL_PASSWORD: z.string().optional(),
   EMAIL_FROM: z.string().email().default('noreply@time2ship.com'),
   EMAIL_FROM_NAME: z.string().default('Time2Ship'),
+  CLIENT_URL: z.string().url().default('http://localhost:3000'),
 });
 
 export type Env = z.infer<typeof envSchema>;

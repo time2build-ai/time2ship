@@ -2,6 +2,15 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { env } from '@/config/env';
 import logger from '@/common/utils/logger';
+import {
+  createEmailLayout,
+  emailHeading,
+  emailParagraph,
+  emailButton,
+  emailInfoBox,
+  emailCodeBlock,
+  emailSignature,
+} from '@/common/templates/email-layout';
 
 /**
  * Email service for sending transactional emails.
@@ -51,6 +60,19 @@ export class EmailService {
   }
 
   /**
+   * Sends an email verification email.
+   *
+   * @param to - Recipient email address
+   * @param data - Verification token and user information
+   */
+  async sendVerificationEmail(to: string, data: { verificationToken: string; email: string }): Promise<void> {
+    const subject = 'Verify Your Email Address';
+    const html = this.getVerificationEmailTemplate(data);
+
+    await this.sendEmail(to, subject, html);
+  }
+
+  /**
    * Generic email sending method.
    *
    * @param to - Recipient email address
@@ -94,103 +116,117 @@ export class EmailService {
    * Returns the HTML template for welcome emails.
    */
   private getWelcomeEmailTemplate(data: { email: string }): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Welcome to Time2Ship</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
-            <h1 style="color: #2c3e50; margin-bottom: 20px;">Welcome to Time2Ship! 🚀</h1>
+    const content = `
+      ${emailHeading('Welcome to Time2Ship! 🚀')}
 
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              Hi there,
-            </p>
+      ${emailParagraph('Hi there,')}
 
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              Thank you for registering with Time2Ship! Your account has been successfully created.
-            </p>
+      ${emailParagraph('Thank you for registering with Time2Ship! Your account has been successfully created and you\'re ready to start building amazing things.')}
 
-            <div style="background-color: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; color: #666;">
-                <strong>Email:</strong> ${data.email}
-              </p>
-            </div>
+      ${emailInfoBox(`
+        <strong>Your Account:</strong><br />
+        Email: ${data.email}
+      `)}
 
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              You can now start using all the features of Time2Ship.
-            </p>
+      ${emailParagraph('Here\'s what you can do next:')}
 
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              If you have any questions, feel free to reach out to our support team.
-            </p>
+      ${emailParagraph(`
+        <strong>✓</strong> Complete your profile<br />
+        <strong>✓</strong> Explore our features<br />
+        <strong>✓</strong> Start your first project<br />
+        <strong>✓</strong> Invite your team members
+      `)}
 
-            <p style="font-size: 16px; margin-top: 30px;">
-              Best regards,<br>
-              The Time2Ship Team
-            </p>
-          </div>
+      ${emailButton('Get Started', `${env.CLIENT_URL || 'http://localhost:3000'}/dashboard`)}
 
-          <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            <p>This is an automated message, please do not reply to this email.</p>
-          </div>
-        </body>
-      </html>
+      ${emailParagraph('If you have any questions or need assistance, our support team is here to help. Just reply to this email and we\'ll get back to you as soon as possible.')}
+
+      ${emailSignature()}
     `;
+
+    return createEmailLayout({
+      title: 'Welcome to Time2Ship',
+      preheader: 'Your account has been successfully created',
+      content,
+    });
   }
 
   /**
    * Returns the HTML template for password reset emails.
    */
   private getPasswordResetTemplate(data: { resetToken: string; email: string }): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Password Reset Request</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
-            <h1 style="color: #2c3e50; margin-bottom: 20px;">Password Reset Request</h1>
+    const resetUrl = `${env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${data.resetToken}`;
 
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              Hi,
-            </p>
+    const content = `
+      ${emailHeading('Password Reset Request 🔐')}
 
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              We received a request to reset the password for your Time2Ship account (${data.email}).
-            </p>
+      ${emailParagraph('Hi,')}
 
-            <div style="background-color: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0;">
-                <strong>Your reset token:</strong>
-              </p>
-              <p style="margin: 0; font-family: monospace; font-size: 14px; background-color: #f8f9fa; padding: 10px; border-radius: 3px; word-break: break-all;">
-                ${data.resetToken}
-              </p>
-            </div>
+      ${emailParagraph(`We received a request to reset the password for your Time2Ship account (<strong>${data.email}</strong>).`)}
 
-            <p style="font-size: 16px; margin-bottom: 15px;">
-              If you didn't request this password reset, please ignore this email.
-            </p>
+      ${emailParagraph('Click the button below to reset your password. This link will expire in 1 hour for security reasons.')}
 
-            <p style="font-size: 16px; margin-top: 30px;">
-              Best regards,<br>
-              The Time2Ship Team
-            </p>
-          </div>
+      ${emailButton('Reset Password', resetUrl, { color: '#ef4444' })}
 
-          <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
-            <p>This is an automated message, please do not reply to this email.</p>
-          </div>
-        </body>
-      </html>
+      ${emailParagraph('Or copy and paste this link into your browser:')}
+
+      ${emailCodeBlock(resetUrl)}
+
+      ${emailInfoBox(`
+        <strong>⚠️ Security Notice:</strong><br />
+        If you didn't request this password reset, please ignore this email. Your password will remain unchanged.
+      `, { backgroundColor: '#fef2f2' })}
+
+      ${emailParagraph('For security reasons, this reset link will expire in 1 hour. If you need a new link, you can request another password reset.')}
+
+      ${emailSignature()}
     `;
+
+    return createEmailLayout({
+      title: 'Password Reset Request',
+      preheader: 'Reset your Time2Ship password',
+      content,
+    });
+  }
+
+  /**
+   * Returns the HTML template for email verification emails.
+   */
+  private getVerificationEmailTemplate(data: { verificationToken: string; email: string }): string {
+    const verificationUrl = `${env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${data.verificationToken}`;
+
+    const content = `
+      ${emailHeading('Verify Your Email Address ✉️')}
+
+      ${emailParagraph('Hi,')}
+
+      ${emailParagraph(`Thanks for signing up with Time2Ship! To complete your registration, please verify your email address (<strong>${data.email}</strong>).`)}
+
+      ${emailParagraph('Click the button below to verify your email and activate your account:')}
+
+      ${emailButton('Verify Email Address', verificationUrl, { color: '#10b981' })}
+
+      ${emailParagraph('Or copy and paste this link into your browser:')}
+
+      ${emailCodeBlock(verificationUrl)}
+
+      ${emailInfoBox(`
+        <strong>Why verify?</strong><br />
+        Email verification helps us ensure the security of your account and allows us to send you important updates about your Time2Ship account.
+      `)}
+
+      ${emailParagraph('This verification link will expire in 24 hours. If it expires, you can request a new verification email from your account settings.')}
+
+      ${emailParagraph('If you didn\'t create an account with Time2Ship, you can safely ignore this email.')}
+
+      ${emailSignature()}
+    `;
+
+    return createEmailLayout({
+      title: 'Verify Your Email',
+      preheader: 'Please verify your email address to complete registration',
+      content,
+    });
   }
 }
 

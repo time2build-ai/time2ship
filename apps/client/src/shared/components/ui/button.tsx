@@ -2,27 +2,35 @@ import { cn } from '@/shared/lib/utils';
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'ghost';
   loading?: boolean;
 }
 
+const variantStyles = {
+  primary: 'bg-accent-primary hover:bg-accent-primary-soft text-white hover:shadow-glow',
+  secondary: 'bg-transparent hover:bg-ink-subtle text-surface border border-ink-subtle hover:border-surface-dim',
+  ghost: 'bg-transparent hover:bg-ink-subtle text-surface-dim hover:text-surface',
+} as const;
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', loading = false, className, children, disabled, ...props }, ref) => {
+  function Button({ variant = 'primary', loading = false, className, children, disabled, ...props }, ref) {
+    const isDisabled = loading || disabled;
+
     return (
       <button
         ref={ref}
         className={cn(
-          'rounded-lg px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
-          variant === 'primary' &&
-            'bg-black text-white hover:bg-gray-800 focus:ring-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200',
-          variant === 'secondary' &&
-            'bg-gray-200 text-black hover:bg-gray-300 focus:ring-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600',
-          variant === 'outline' &&
-            'border border-gray-300 bg-transparent hover:bg-gray-50 focus:ring-gray-400 dark:border-gray-600 dark:hover:bg-gray-800',
-          (loading || disabled) && 'cursor-not-allowed opacity-50',
+          'inline-flex items-center justify-center gap-2',
+          'px-6 py-3',
+          'text-sm font-medium tracking-wide',
+          'rounded-md',
+          'transition-all duration-150 ease-out',
+          'active:scale-[0.98]',
+          variantStyles[variant],
+          isDisabled && 'cursor-not-allowed opacity-50',
           className
         )}
-        disabled={loading || disabled}
+        disabled={isDisabled}
         {...props}
       >
         {loading ? 'Loading...' : children}
@@ -30,5 +38,3 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     );
   }
 );
-
-Button.displayName = 'Button';

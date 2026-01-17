@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Templates Preview - Time2Ship</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f3f4f6;
+      padding: 20px;
+      margin: 0;
+    }
+    .preview-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 40px;
+    }
+    .template-section {
+      margin-bottom: 60px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .template-header {
+      background: #f9fafb;
+      padding: 15px 20px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .template-header h2 {
+      margin: 0;
+      color: #374151;
+      font-size: 18px;
+    }
+    .template-header p {
+      margin: 5px 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .template-preview {
+      padding: 20px;
+      background: #ffffff;
+    }
+    iframe {
+      width: 100%;
+      border: none;
+      min-height: 600px;
+      background: #f4f4f4;
+    }
+    .note {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    .note strong {
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-container">
+    <h1>📧 Email Templates Preview</h1>
+    <p class="subtitle">Preview of all Time2Ship transactional email templates</p>
+
+    <div class="note">
+      <strong>Note:</strong> To preview actual rendered emails, you need to generate them from the EmailService.
+      This is a static preview file. Run the templates through the service to see the real output.
+    </div>
+
+    <div class="template-section">
+      <div class="template-header">
+        <h2>1. Welcome Email</h2>
+        <p>Sent when a user successfully registers for an account</p>
+      </div>
+      <div class="template-preview">
+        <strong>Key Features:</strong>
+        <ul>
+          <li>Welcoming message with emoji</li>
+          <li>User account details in info box</li>
+          <li>Getting started checklist</li>
+          <li>Call-to-action button to dashboard</li>
+          <li>Support contact information</li>
+        </ul>
+        <br>
+        <strong>Triggers:</strong>
+        <ul>
+          <li>User completes registration</li>
+          <li>Called from <code>auth.service.ts</code> after user creation</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="template-section">
+      <div class="template-header">
+        <h2>2. Password Reset Email</h2>
+        <p>Sent when a user requests a password reset</p>
+      </div>
+      <div class="template-preview">
+        <strong>Key Features:</strong>
+        <ul>
+          <li>Clear reset button with secure link</li>
+          <li>Expiration notice (1 hour)</li>
+          <li>Security warning if not requested</li>
+          <li>Alternative plain text link in code block</li>
+          <li>Professional security notice in info box</li>
+        </ul>
+        <br>
+        <strong>Security Considerations:</strong>
+        <ul>
+          <li>Token expires in 1 hour</li>
+          <li>One-time use token</li>
+          <li>Clear warning for users who didn't request reset</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="template-section">
+      <div class="template-header">
+        <h2>3. Email Verification Email</h2>
+        <p>Sent when a user needs to verify their email address</p>
+      </div>
+      <div class="template-preview">
+        <strong>Key Features:</strong>
+        <ul>
+          <li>Verification button with secure link</li>
+          <li>Expiration notice (24 hours)</li>
+          <li>Explanation of why verification is needed</li>
+          <li>Alternative plain text link in code block</li>
+          <li>Ignore notice for unsolicited emails</li>
+        </ul>
+        <br>
+        <strong>Usage:</strong>
+        <ul>
+          <li>Optional email verification flow</li>
+          <li>Can be integrated into registration or account settings</li>
+          <li>Token expires in 24 hours</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr style="margin: 40px 0; border: none; border-top: 2px solid #e5e7eb;">
+
+    <h2>Email Template Components</h2>
+    <p>All templates use modular components from <code>email-layout.ts</code>:</p>
+
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+      <thead>
+        <tr style="background: #f9fafb; text-align: left;">
+          <th style="padding: 12px; border: 1px solid #e5e7eb;">Component</th>
+          <th style="padding: 12px; border: 1px solid #e5e7eb;">Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>createEmailLayout()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Base wrapper with responsive design</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>emailHeading()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Styled H1 heading</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>emailParagraph()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Styled paragraph</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>emailButton()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Call-to-action button</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>emailInfoBox()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Highlighted info box</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>emailCodeBlock()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Monospace code/token display</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>emailSignature()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Consistent sign-off</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;"><code>emailDivider()</code></td>
+          <td style="padding: 12px; border: 1px solid #e5e7eb;">Horizontal divider</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr style="margin: 40px 0; border: none; border-top: 2px solid #e5e7eb;">
+
+    <h2>How to Preview Actual Emails</h2>
+    <p>To see the actual rendered emails:</p>
+
+    <ol>
+      <li><strong>Development Mode:</strong> Set up email credentials in <code>.env</code> and send a test email</li>
+      <li><strong>Log Output:</strong> Check console logs in test mode to see email subjects</li>
+      <li><strong>Email Testing Service:</strong> Use services like Mailtrap or Ethereal Email for development testing</li>
+      <li><strong>Unit Tests:</strong> Run <code>npm test -- email.service.test.ts</code> to verify templates generate correctly</li>
+    </ol>
+
+    <div style="margin-top: 40px; padding: 20px; background: #f9fafb; border-radius: 8px;">
+      <h3 style="margin-top: 0;">Configuration Required</h3>
+      <p>Set these environment variables in <code>apps/api/.env</code>:</p>
+      <pre style="background: white; padding: 15px; border-radius: 4px; overflow-x: auto;">EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_FROM=noreply@time2ship.com
+EMAIL_FROM_NAME=Time2Ship
+CLIENT_URL=http://localhost:3000</pre>
+    </div>
+  </div>
+</body>
+</html>

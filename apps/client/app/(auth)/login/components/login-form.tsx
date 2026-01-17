@@ -1,14 +1,16 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
 import { useActionState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
-import { Input } from '@/shared/components/ui/input';
+import { toast } from 'sonner';
+
 import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+
 import { loginAction } from '../actions';
 
-function SubmitButton() {
+function SubmitButton(): React.ReactElement {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" loading={pending} className="w-full">
@@ -17,25 +19,24 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm() {
+export function LoginForm(): React.ReactElement {
   const [state, formAction] = useActionState(loginAction, null);
 
   useEffect(() => {
-    if (state?.error) {
-      toast.error(state.error);
-    }
+    if (!state?.error) return;
+    toast.error(state.error);
   }, [state?.error]);
 
   return (
-    <div className="w-full max-w-md space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Welcome back</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
+    <div className="w-full max-w-md space-y-8">
+      <div className="text-center space-y-3">
+        <h1 className="text-4xl font-bold tracking-tighter">Welcome back</h1>
+        <p className="text-base text-surface-dim">
           Sign in to your account
         </p>
       </div>
 
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-6">
         <Input
           name="email"
           type="email"
@@ -59,9 +60,12 @@ export function LoginForm() {
         <SubmitButton />
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-center text-sm text-surface-dim">
         Don't have an account?{' '}
-        <Link href="/register" className="font-medium text-black hover:underline dark:text-white">
+        <Link
+          href="/register"
+          className="font-medium text-accent-primary hover:text-accent-primary-soft transition-colors duration-150 ease-out"
+        >
           Sign up
         </Link>
       </p>

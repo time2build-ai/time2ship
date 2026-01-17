@@ -1,14 +1,16 @@
 'use client';
 
-import { useFormStatus } from 'react-dom';
 import { useActionState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
-import { Input } from '@/shared/components/ui/input';
+import { toast } from 'sonner';
+
 import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+
 import { registerAction } from '../actions';
 
-function SubmitButton() {
+function SubmitButton(): React.ReactElement {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" loading={pending} className="w-full">
@@ -17,25 +19,24 @@ function SubmitButton() {
   );
 }
 
-export function RegisterForm() {
+export function RegisterForm(): React.ReactElement {
   const [state, formAction] = useActionState(registerAction, null);
 
   useEffect(() => {
-    if (state?.error) {
-      toast.error(state.error);
-    }
+    if (!state?.error) return;
+    toast.error(state.error);
   }, [state?.error]);
 
   return (
-    <div className="w-full max-w-md space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Create an account</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
+    <div className="w-full max-w-md space-y-8">
+      <div className="text-center space-y-3">
+        <h1 className="text-4xl font-bold tracking-tighter">Create an account</h1>
+        <p className="text-base text-surface-dim">
           Get started with Time2Ship
         </p>
       </div>
 
-      <form action={formAction} className="space-y-4">
+      <form action={formAction} className="space-y-6">
         <Input
           name="email"
           type="email"
@@ -46,7 +47,7 @@ export function RegisterForm() {
           error={state?.errors?.email?.[0]}
         />
 
-        <div className="space-y-1">
+        <div className="space-y-2">
           <Input
             name="password"
             type="password"
@@ -56,7 +57,7 @@ export function RegisterForm() {
             required
             error={state?.errors?.password?.[0]}
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-surface-dim tracking-wide">
             Must be at least 8 characters with uppercase, lowercase, number, and special character
           </p>
         </div>
@@ -64,9 +65,12 @@ export function RegisterForm() {
         <SubmitButton />
       </form>
 
-      <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-center text-sm text-surface-dim">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-black hover:underline dark:text-white">
+        <Link
+          href="/login"
+          className="font-medium text-accent-primary hover:text-accent-primary-soft transition-colors duration-150 ease-out"
+        >
           Sign in
         </Link>
       </p>

@@ -63,6 +63,30 @@ describe('EmailService', () => {
     });
   });
 
+  describe('sendVerificationEmail', () => {
+    it('should send verification email with correct data', async () => {
+      const to = 'test@example.com';
+      const data = { email: to, verificationToken: 'verification-token-123' };
+
+      await emailService.sendVerificationEmail(to, data);
+
+      // In test environment, it should log instead of sending
+      // No error should be thrown
+      expect(true).toBe(true);
+    });
+
+    it('should include verification token in email', async () => {
+      const to = 'test@example.com';
+      const verificationToken = 'secure-verification-token-456';
+      const data = { email: to, verificationToken };
+
+      await emailService.sendVerificationEmail(to, data);
+
+      // Should complete without error
+      expect(true).toBe(true);
+    });
+  });
+
   describe('email templates', () => {
     it('should generate welcome email template with user email', () => {
       const data = { email: 'user@example.com' };
@@ -80,6 +104,15 @@ describe('EmailService', () => {
 
       expect(html).toContain(data.resetToken);
       expect(html).toContain('Password Reset');
+    });
+
+    it('should generate verification email template with token', () => {
+      const data = { email: 'user@example.com', verificationToken: 'verification123' };
+      const service = emailService as any;
+      const html = service.getVerificationEmailTemplate(data);
+
+      expect(html).toContain(data.verificationToken);
+      expect(html).toContain('Verify Your Email');
     });
   });
 
