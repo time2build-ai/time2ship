@@ -117,6 +117,11 @@ export class PasswordResetService {
         email,
         resetToken: otp, // OTP code sent in email
       });
+
+      // Log OTP for development (remove in production)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV] Password reset OTP for ${email}: ${otp}`);
+      }
     }
 
     // Always return success to prevent email enumeration
