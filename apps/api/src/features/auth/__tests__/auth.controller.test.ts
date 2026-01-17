@@ -37,4 +37,24 @@ describe('AuthController', () => {
       expect(ResponseHelper.created).toHaveBeenCalledWith(mockRes, mockResult, 'User registered successfully');
     });
   });
+
+  describe('login', () => {
+    it('should call authService.login and return success response', async () => {
+      const mockResult = {
+        user: { id: '1', email: 'test@example.com', createdAt: new Date(), updatedAt: new Date() },
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token'
+      };
+      mockReq.validated = {
+        body: { email: 'test@example.com', password: 'Password123!' }
+      };
+
+      (authService.login as jest.Mock).mockResolvedValue(mockResult);
+
+      await authController.login(mockReq as Request, mockRes as Response);
+
+      expect(authService.login).toHaveBeenCalledWith('test@example.com', 'Password123!');
+      expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockResult);
+    });
+  });
 });

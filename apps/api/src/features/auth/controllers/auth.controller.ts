@@ -20,6 +20,20 @@ export class AuthController {
     );
     ResponseHelper.created(res, result, 'User registered successfully');
   }
+
+  /**
+   * Authenticates a user with email and password.
+   *
+   * @param req - Express request with validated body containing email and password
+   * @param res - Express response object
+   */
+  async login(req: Request, res: Response): Promise<void> {
+    const result = await authService.login(
+      req.validated!.body.email,
+      req.validated!.body.password
+    );
+    ResponseHelper.success(res, result);
+  }
 }
 
 export const authController = new AuthController();
