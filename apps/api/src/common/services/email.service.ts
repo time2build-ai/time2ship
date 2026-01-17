@@ -155,36 +155,37 @@ export class EmailService {
    * Returns the HTML template for password reset emails.
    */
   private getPasswordResetTemplate(data: { resetToken: string; email: string }): string {
-    const resetUrl = `${env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${data.resetToken}`;
+    // resetToken now contains the 6-digit OTP code
+    const otpCode = data.resetToken;
 
     const content = `
-      ${emailHeading('Password Reset Request 🔐')}
+      ${emailHeading('Password Reset Code 🔐')}
 
       ${emailParagraph('Hi,')}
 
       ${emailParagraph(`We received a request to reset the password for your Time2Ship account (<strong>${data.email}</strong>).`)}
 
-      ${emailParagraph('Click the button below to reset your password. This link will expire in 1 hour for security reasons.')}
+      ${emailParagraph('Enter this code to reset your password. This code will expire in 15 minutes for security reasons.')}
 
-      ${emailButton('Reset Password', resetUrl, { color: '#ef4444' })}
-
-      ${emailParagraph('Or copy and paste this link into your browser:')}
-
-      ${emailCodeBlock(resetUrl)}
+      <div style="background-color: #f9fafb; border: 2px solid #3b82f6; padding: 24px; margin: 24px 0; border-radius: 8px; text-align: center;">
+        <code style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 700; color: #1f2937; letter-spacing: 8px; display: block;">
+          ${otpCode}
+        </code>
+      </div>
 
       ${emailInfoBox(`
         <strong>⚠️ Security Notice:</strong><br />
         If you didn't request this password reset, please ignore this email. Your password will remain unchanged.
       `, { backgroundColor: '#fef2f2' })}
 
-      ${emailParagraph('For security reasons, this reset link will expire in 1 hour. If you need a new link, you can request another password reset.')}
+      ${emailParagraph('For security reasons, this code will expire in 15 minutes. If you need a new code, you can request another password reset.')}
 
       ${emailSignature()}
     `;
 
     return createEmailLayout({
-      title: 'Password Reset Request',
-      preheader: 'Reset your Time2Ship password',
+      title: 'Password Reset Code',
+      preheader: 'Your password reset code',
       content,
     });
   }
