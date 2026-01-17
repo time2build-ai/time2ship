@@ -3,6 +3,7 @@ import { asyncHandler } from '@/middleware/asyncHandler';
 import { validate } from '@/middleware/validate';
 import { authService } from '../services/auth.service';
 import { registerSchema, loginSchema, refreshTokenSchema } from '../validators/auth.validators';
+import { ResponseHelper } from '@/common/helpers/response';
 
 const router = Router();
 
@@ -14,7 +15,7 @@ router.post(
       req.validated!.body.email,
       req.validated!.body.password
     );
-    res.status(201).json({ success: true, data: result });
+    ResponseHelper.created(res, result, 'User registered successfully');
   })
 );
 
@@ -26,7 +27,7 @@ router.post(
       req.validated!.body.email,
       req.validated!.body.password
     );
-    res.json({ success: true, data: result });
+    ResponseHelper.success(res, result);
   })
 );
 
@@ -35,7 +36,7 @@ router.post(
   validate(refreshTokenSchema),
   asyncHandler(async (req: Request, res) => {
     const result = await authService.refresh(req.validated!.body.refreshToken);
-    res.json({ success: true, data: result });
+    ResponseHelper.success(res, result);
   })
 );
 
@@ -44,7 +45,7 @@ router.post(
   validate(refreshTokenSchema),
   asyncHandler(async (req: Request, res) => {
     await authService.logout(req.validated!.body.refreshToken);
-    res.json({ success: true, message: 'Logged out successfully' });
+    ResponseHelper.success(res, null, 'Logged out successfully');
   })
 );
 
