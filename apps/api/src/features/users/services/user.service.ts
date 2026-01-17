@@ -46,7 +46,7 @@ export class UserService {
       db.select({ count: sql<number>`count(*)` }).from(users),
     ]);
 
-    const meta = PaginationHelper.buildMeta(page, limit, totalResult[0].count);
+    const meta = PaginationHelper.buildMeta(page, limit, Number(totalResult[0].count));
 
     return { users: userList, meta };
   }

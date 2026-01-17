@@ -36,12 +36,15 @@ app.use('/api/v1', featureRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📍 Environment: ${env.NODE_ENV}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/v1/auth`);
-  console.log(`👥 User endpoints: http://localhost:${PORT}/api/v1/users`);
-});
+// Only start server if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`📍 Environment: ${env.NODE_ENV}`);
+    console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+    console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/v1/auth`);
+    console.log(`👥 User endpoints: http://localhost:${PORT}/api/v1/users`);
+  });
+}
 
 export default app;

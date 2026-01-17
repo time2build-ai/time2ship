@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { tokenService } from '../services/token.service';
-import { AppError } from '@/common/utils/errors';
+import { UnauthorizedError } from '@/common/utils/errors';
+import { AUTH_ERROR_CODES } from '../constants/error-codes';
 
 /**
  * Extended Express Request with authenticated user information.
@@ -34,7 +35,7 @@ export const authenticate = (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('No token provided', 401);
+      throw new UnauthorizedError('No token provided', AUTH_ERROR_CODES.TOKEN_INVALID);
     }
 
     const token = authHeader.substring(7);

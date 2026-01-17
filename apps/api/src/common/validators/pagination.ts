@@ -20,11 +20,13 @@ export const paginationSchema = z.object({
       .string()
       .regex(/^\d+$/, 'Page must be a number')
       .transform(Number)
+      .refine((val) => val > 0, 'Page must be greater than 0')
       .optional(),
     limit: z
       .string()
       .regex(/^\d+$/, 'Limit must be a number')
       .transform(Number)
+      .refine((val) => val > 0, 'Limit must be greater than 0')
       .optional(),
   }),
 });

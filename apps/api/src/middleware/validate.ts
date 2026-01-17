@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodError, ZodSchema } from 'zod';
-import { AppError } from '@/common/utils/errors';
+import { ZodSchema } from 'zod';
 
 /**
  * Express middleware factory for validating request data using Zod schemas.
@@ -42,14 +41,8 @@ export const validate = (schema: ZodSchema) => {
       req.validated = validated;
       next();
     } catch (error: any) {
-      if (error instanceof ZodError) {
-        const messages = error.issues
-          .map((err) => `${err.path.join('.')}: ${err.message}`)
-          .join(', ');
-        next(new AppError(messages, 400));
-      } else {
-        next(error);
-      }
+      // Pass ZodError directly to error handler for proper formatting
+      next(error);
     }
   };
 };
