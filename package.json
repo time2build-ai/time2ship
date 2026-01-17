@@ -1,0 +1,28 @@
+{
+  "name": "time2ship",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Time2Ship Boilerplate - Monorepo",
+  "scripts": {
+    "prepare": "husky",
+    "review": "./.husky/scripts/review-changes.sh"
+  },
+  "workspaces": [
+    "apps/client",
+    "apps/api"
+  ],
+  "lint-staged": {
+    "apps/client/**/*.{ts,tsx}": [
+      "cd apps/client && npm run lint --fix",
+      "cd apps/client && tsc --noEmit"
+    ],
+    "apps/api/**/*.ts": [
+      "cd apps/api && npm run lint -- --fix",
+      "cd apps/api && npm run type-check"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.0"
+  }
+}

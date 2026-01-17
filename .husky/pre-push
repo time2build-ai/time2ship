@@ -1,0 +1,67 @@
+#!/bin/sh
+
+echo "🚀 Pre-push checks starting..."
+echo ""
+
+# Check if there are commits to push
+if git diff --quiet HEAD @{u} 2>/dev/null; then
+    echo "No new commits to push."
+else
+    echo "📊 New commits detected!"
+    echo ""
+    echo "Would you like to run code review with code-simplifier before pushing?"
+    echo "(This will analyze your changes and suggest simplifications)"
+    echo ""
+    printf "Run code review? [y/N] "
+
+    # Read user input (only in interactive terminal)
+    if [ -t 0 ]; then
+        read -r response
+        case "$response" in
+            [yY][eE][sS]|[yY])
+                echo ""
+                echo "🤖 Running code review..."
+                .husky/scripts/review-changes.sh
+                echo ""
+                printf "Continue with push? [y/N] "
+                read -r continue_response
+                case "$continue_response" in
+                    [yY][eE][sS]|[yY])
+                        echo "Continuing with push..."
+                        ;;
+                    *)
+                        echo "Push aborted. Make changes and try again."
+                        exit 1
+                        ;;
+                esac
+                ;;
+            *)
+                echo "Skipping code review."
+                ;;
+        esac
+    else
+        echo "Non-interactive terminal. Skipping code review prompt."
+        echo "Run '.husky/scripts/review-changes.sh' manually to review changes."
+    fi
+fi
+
+echo ""
+echo "🧪 Running API e2e tests..."
+
+# Change to API directory and run e2e tests
+cd apps/api && npm run test:e2e
+
+# Check if tests passed
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ API e2e tests failed! Push aborted."
+    echo "Fix the failing tests before pushing."
+    echo ""
+    echo "To skip this hook (not recommended):"
+    echo "  git push --no-verify"
+    echo ""
+    exit 1
+fi
+
+echo ""
+echo "✅ All checks passed! Pushing to remote..."
