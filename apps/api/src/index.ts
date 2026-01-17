@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -9,6 +9,7 @@ import { notFoundHandler } from './middleware/notFoundHandler';
 import { requestIdMiddleware } from './middleware/requestId';
 import { env } from './config/env';
 import featureRoutes from './features';
+import { ResponseHelper } from './common/helpers/response';
 
 dotenv.config();
 
@@ -23,10 +24,9 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/health', (req, res) => {
-  res.status(200).json({
+app.get('/health', (_req: Request, res: Response) => {
+  ResponseHelper.success(res, {
     status: 'ok',
-    timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });
 });
