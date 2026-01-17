@@ -1,4 +1,4 @@
-import { env } from '@/shared/lib/env';
+import { getApiUrl } from '@/shared/lib/env';
 
 export type ApiResponse<T> =
   | { success: true; data: T }
@@ -12,7 +12,7 @@ export async function apiRequest<T>(
   options?: RequestInit
 ): Promise<ApiResponse<T>> {
   try {
-    const response = await fetch(`${env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+    const response = await fetch(`${getApiUrl()}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
         ...options?.headers,

@@ -11,7 +11,7 @@ async function seed() {
     const [testUser] = await db
       .insert(users)
       .values({
-        email: 'test@example.com',
+        email: 'test@time2ship.ai',
         password: testUserPassword,
       })
       .returning();
@@ -22,7 +22,7 @@ async function seed() {
     const [adminUser] = await db
       .insert(users)
       .values({
-        email: 'admin@example.com',
+        email: 'admin@time2ship.ai',
         password: adminPassword,
       })
       .returning();

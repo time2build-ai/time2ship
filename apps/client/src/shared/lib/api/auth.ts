@@ -24,7 +24,7 @@ export const authApi = {
    * Login with email and password
    */
   login: (data: { email: string; password: string }) =>
-    apiRequest<LoginResponse>('/api/auth/login', {
+    apiRequest<LoginResponse>('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -33,7 +33,7 @@ export const authApi = {
    * Register a new user
    */
   register: (data: { email: string; password: string }) =>
-    apiRequest<RegisterResponse>('/api/auth/register', {
+    apiRequest<RegisterResponse>('/api/v1/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
@@ -42,7 +42,7 @@ export const authApi = {
    * Refresh access token using refresh token
    */
   refresh: (refreshToken: string) =>
-    apiRequest<AuthTokens>('/api/auth/refresh', {
+    apiRequest<AuthTokens>('/api/v1/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     }),
@@ -51,7 +51,7 @@ export const authApi = {
    * Logout and revoke refresh token
    */
   logout: (refreshToken: string) =>
-    apiRequest<void>('/api/auth/logout', {
+    apiRequest<void>('/api/v1/auth/logout', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     }),

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { isTokenExpiringSoon } from '@/shared/lib/auth/tokens';
 import { authApi } from '@/shared/lib/api/auth';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken')?.value;
   const refreshToken = request.cookies.get('refreshToken')?.value;
   const path = request.nextUrl.pathname;
