@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -22,13 +22,14 @@ function SubmitButton(): React.ReactElement {
 export function ForgotPasswordForm(): React.ReactElement {
   const router = useRouter();
   const [state, formAction] = useActionState(forgotPasswordAction, null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error);
     }
     if (state?.success) {
-      const email = new FormData(document.querySelector('form')!).get('email') as string;
+      const email = emailRef.current?.value || '';
       toast.success('Reset code sent! Check your email.');
       router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
     }
@@ -47,6 +48,7 @@ export function ForgotPasswordForm(): React.ReactElement {
 
       <form action={formAction} className="space-y-6">
         <Input
+          ref={emailRef}
           name="email"
           type="email"
           label="Email"
