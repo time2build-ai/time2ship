@@ -86,19 +86,15 @@ echo "Claude will review your changes and suggest simplifications."
 echo "The review will focus on recently modified code."
 echo ""
 
-# Check if running in VS Code
-if [ -n "$VSCODE_IPC_HOOK_CLI" ] || [ -n "$TERM_PROGRAM" ]; then
-    # Running in VS Code or supported terminal
-    claude --skill code-simplifier:code-simplifier
-else
-    # Fallback: just show the diff and instructions
-    echo "⚠️  Unable to launch interactive Claude Code session."
-    echo ""
-    echo "Please run the following command manually:"
-    echo "  claude --skill code-simplifier:code-simplifier"
-    echo ""
-    echo "Or run this script from VS Code integrated terminal."
-fi
+# For now, just show a summary since Claude CLI doesn't support --skill flag
+echo "📋 Code review summary:"
+echo "   - Review the diff above for potential improvements"
+echo "   - Look for complexity that can be reduced"
+echo "   - Check for repeated patterns that can be abstracted"
+echo "   - Ensure code is readable and follows best practices"
+echo ""
+echo "💡 To run full code-simplifier review:"
+echo "   Run 'claude' and use the /code-simplifier:code-simplifier skill manually"
 
 # Clean up
 rm -f "$CHANGES_SUMMARY"

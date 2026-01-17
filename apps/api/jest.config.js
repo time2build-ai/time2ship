@@ -6,9 +6,15 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^uuid$': '<rootDir>/src/__tests__/__mocks__/uuid.ts',
+  },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
+      useESM: false,
+    }],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(uuid)/)',
+    'node_modules/',
   ],
   collectCoverageFrom: [
     'src/**/*.ts',
