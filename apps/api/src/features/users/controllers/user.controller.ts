@@ -33,6 +33,21 @@ export class UserController {
     const user = await userService.findById(req.params.id);
     ResponseHelper.success(res, user);
   }
+
+  /**
+   * Updates a user's information.
+   *
+   * @param req - Express request with user ID in params and update data in validated body
+   * @param res - Express response object
+   * @returns The updated user
+   */
+  async update(req: Request, res: Response): Promise<void> {
+    const user = await userService.update(
+      req.params.id,
+      req.validated!.body
+    );
+    ResponseHelper.success(res, user, 'User updated successfully');
+  }
 }
 
 export const userController = new UserController();

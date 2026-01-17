@@ -57,4 +57,26 @@ describe('UserController', () => {
       expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockUser);
     });
   });
+
+  describe('update', () => {
+    it('should call userService.update and return success response with message', async () => {
+      const mockUser = {
+        id: '123',
+        email: 'updated@example.com',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      mockReq.params = { id: '123' };
+      mockReq.validated = {
+        body: { email: 'updated@example.com', password: 'NewPass123!' }
+      };
+
+      (userService.update as jest.Mock).mockResolvedValue(mockUser);
+
+      await userController.update(mockReq as Request, mockRes as Response);
+
+      expect(userService.update).toHaveBeenCalledWith('123', mockReq.validated!.body);
+      expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockUser, 'User updated successfully');
+    });
+  });
 });
