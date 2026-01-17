@@ -1,3 +1,5 @@
+export { ERROR_CODES } from './error-codes';
+
 /**
  * JWT token expiration times.
  * ACCESS: Short-lived token for API requests (15 minutes)
