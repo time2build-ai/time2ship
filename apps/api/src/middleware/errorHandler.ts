@@ -42,9 +42,9 @@ export const errorHandler = (
     const details: Record<string, string> = {};
 
     // Extract field-level error messages
-    err.errors.forEach((error) => {
-      const field = error.path.join('.');
-      details[field] = error.message;
+    err.issues.forEach((issue) => {
+      const field = issue.path.join('.');
+      details[field] = issue.message;
     });
 
     ResponseHelper.error(

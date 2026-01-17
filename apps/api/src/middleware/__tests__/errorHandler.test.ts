@@ -12,6 +12,7 @@ describe('errorHandler', () => {
     mockRes = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
+      locals: {},
     };
     mockNext = jest.fn();
     jest.spyOn(console, 'error').mockImplementation();
@@ -23,15 +24,22 @@ describe('errorHandler', () => {
   });
 
   it('should handle AppError with correct status code', () => {
-    const error = new AppError('Test error', 400);
+    const error = new AppError('Test error', 400, 'TEST.ERROR');
 
     errorHandler(error, mockReq as Request, mockRes as Response, mockNext);
 
     expect(mockRes.status).toHaveBeenCalledWith(400);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Test error',
-    });
+    expect(mockRes.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: {
+          code: 'TEST.ERROR',
+          message: 'Test error',
+        },
+        timestamp: expect.any(String),
+        requestId: expect.any(String),
+      })
+    );
   });
 
   it('should handle generic Error in development with error message', () => {
@@ -41,10 +49,17 @@ describe('errorHandler', () => {
     errorHandler(error, mockReq as Request, mockRes as Response, mockNext);
 
     expect(mockRes.status).toHaveBeenCalledWith(500);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Generic error',
-    });
+    expect(mockRes.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: {
+          code: 'SERVER.INTERNAL_ERROR',
+          message: 'Generic error',
+        },
+        timestamp: expect.any(String),
+        requestId: expect.any(String),
+      })
+    );
     expect(console.error).toHaveBeenCalledWith('Unexpected error:', error);
   });
 
@@ -55,10 +70,17 @@ describe('errorHandler', () => {
     errorHandler(error, mockReq as Request, mockRes as Response, mockNext);
 
     expect(mockRes.status).toHaveBeenCalledWith(500);
-    expect(mockRes.json).toHaveBeenCalledWith({
-      success: false,
-      message: 'Internal server error',
-    });
+    expect(mockRes.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: {
+          code: 'SERVER.INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
+        timestamp: expect.any(String),
+        requestId: expect.any(String),
+      })
+    );
     expect(console.error).toHaveBeenCalledWith('Unexpected error:', error);
   });
 
@@ -70,11 +92,12 @@ describe('errorHandler', () => {
     expect(console.error).toHaveBeenCalledWith('Unexpected error:', error);
   });
 
-  it('should not log AppError (operational errors)', () => {
-    const error = new AppError('User error', 400);
+  it('should not log AppError (operational errors) as unexpected', () => {
+    process.env.NODE_ENV = 'production';
+    const error = new AppError('User error', 400, 'USER.ERROR');
 
     errorHandler(error, mockReq as Request, mockRes as Response, mockNext);
 
-    expect(console.error).not.toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalledWith('Unexpected error:', error);
   });
 });

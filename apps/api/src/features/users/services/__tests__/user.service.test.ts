@@ -56,7 +56,6 @@ describe('UserService', () => {
       const mockUser = {
         id: '123',
         email: 'test@example.com',
-        password: 'hashed_password',
         createdAt: new Date(),
         updatedAt: new Date(),
       };

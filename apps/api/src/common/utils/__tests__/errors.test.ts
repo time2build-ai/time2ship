@@ -49,7 +49,7 @@ describe('Error Classes', () => {
 
   describe('UnauthorizedError', () => {
     it('should create 401 error with default message', () => {
-      const error = new UnauthorizedError();
+      const error = new UnauthorizedError('Unauthorized', 'AUTH.UNAUTHORIZED');
 
       expect(error.message).toBe('Unauthorized');
       expect(error.statusCode).toBe(401);
@@ -57,14 +57,14 @@ describe('Error Classes', () => {
     });
 
     it('should create 401 error with custom message', () => {
-      const error = new UnauthorizedError('Invalid token');
+      const error = new UnauthorizedError('Invalid token', 'AUTH.INVALID_TOKEN');
 
       expect(error.message).toBe('Invalid token');
       expect(error.statusCode).toBe(401);
     });
 
     it('should inherit from AppError', () => {
-      const error = new UnauthorizedError();
+      const error = new UnauthorizedError('Unauthorized', 'AUTH.UNAUTHORIZED');
 
       expect(error).toBeInstanceOf(AppError);
     });
@@ -72,7 +72,7 @@ describe('Error Classes', () => {
 
   describe('ConflictError', () => {
     it('should create 409 error', () => {
-      const error = new ConflictError('Email already exists');
+      const error = new ConflictError('Email already exists', 'AUTH.EMAIL_ALREADY_EXISTS');
 
       expect(error.message).toBe('Email already exists');
       expect(error.statusCode).toBe(409);
@@ -80,7 +80,7 @@ describe('Error Classes', () => {
     });
 
     it('should inherit from AppError', () => {
-      const error = new ConflictError('Duplicate entry');
+      const error = new ConflictError('Duplicate entry', 'CONFLICT.DUPLICATE_ENTRY');
 
       expect(error).toBeInstanceOf(AppError);
     });
