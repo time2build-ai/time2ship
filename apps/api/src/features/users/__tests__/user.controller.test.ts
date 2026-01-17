@@ -79,4 +79,17 @@ describe('UserController', () => {
       expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockUser, 'User updated successfully');
     });
   });
+
+  describe('delete', () => {
+    it('should call userService.delete and return success response with message', async () => {
+      mockReq.params = { id: '123' };
+
+      (userService.delete as jest.Mock).mockResolvedValue(undefined);
+
+      await userController.delete(mockReq as Request, mockRes as Response);
+
+      expect(userService.delete).toHaveBeenCalledWith('123');
+      expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, null, 'User deleted successfully');
+    });
+  });
 });

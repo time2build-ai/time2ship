@@ -48,6 +48,18 @@ export class UserController {
     );
     ResponseHelper.success(res, user, 'User updated successfully');
   }
+
+  /**
+   * Deletes a user by their ID.
+   *
+   * @param req - Express request with user ID in params
+   * @param res - Express response object
+   * @returns Success message confirming deletion
+   */
+  async delete(req: Request, res: Response): Promise<void> {
+    await userService.delete(req.params.id);
+    ResponseHelper.success(res, null, 'User deleted successfully');
+  }
 }
 
 export const userController = new UserController();
