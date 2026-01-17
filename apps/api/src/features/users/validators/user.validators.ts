@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { paginationSchema } from '@/common/validators/pagination';
 
 const passwordSchema = z
   .string()
@@ -30,3 +31,10 @@ export const getUserSchema = z.object({
     id: z.string().uuid('Invalid user ID format'),
   }),
 });
+
+/**
+ * Validation schema for listing users with pagination.
+ */
+export const listUsersSchema = paginationSchema;
+
+export type ListUsersInput = z.infer<typeof listUsersSchema>;
