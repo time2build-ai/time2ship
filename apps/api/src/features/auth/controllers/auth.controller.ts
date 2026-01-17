@@ -34,6 +34,17 @@ export class AuthController {
     );
     ResponseHelper.success(res, result);
   }
+
+  /**
+   * Rotates tokens using a valid refresh token.
+   *
+   * @param req - Express request with validated body containing refresh token
+   * @param res - Express response object
+   */
+  async refresh(req: Request, res: Response): Promise<void> {
+    const result = await authService.refresh(req.validated!.body.refreshToken);
+    ResponseHelper.success(res, result);
+  }
 }
 
 export const authController = new AuthController();

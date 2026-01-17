@@ -57,4 +57,23 @@ describe('AuthController', () => {
       expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockResult);
     });
   });
+
+  describe('refresh', () => {
+    it('should call authService.refresh and return success response', async () => {
+      const mockResult = {
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token'
+      };
+      mockReq.validated = {
+        body: { refreshToken: 'old-refresh-token' }
+      };
+
+      (authService.refresh as jest.Mock).mockResolvedValue(mockResult);
+
+      await authController.refresh(mockReq as Request, mockRes as Response);
+
+      expect(authService.refresh).toHaveBeenCalledWith('old-refresh-token');
+      expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockResult);
+    });
+  });
 });
