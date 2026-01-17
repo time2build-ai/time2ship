@@ -1,9 +1,11 @@
 import { db } from '@/config/database';
 import { users } from '../schemas/user.schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
-import { AppError } from '@/common/utils/errors';
+import { AppError, NotFoundError } from '@/common/utils/errors';
 import { BCRYPT_ROUNDS } from '@/common/constants';
+import { PaginationHelper, PaginationParams } from '@/common/helpers/pagination';
+import { USER_ERROR_CODES } from '../constants/error-codes';
 
 export class UserService {
   async create(email: string, password: string): Promise<Omit<typeof users.$inferSelect, 'password'>> {
@@ -29,17 +31,39 @@ export class UserService {
     return userWithoutPassword;
   }
 
+  async findAll(params: PaginationParams) {
+    const { page, limit, offset } = PaginationHelper.parseParams(params);
+
+    // Fetch users and total count in parallel
+    const [userList, totalResult] = await Promise.all([
+      db.select({
+        id: users.id,
+        email: users.email,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      }).from(users).limit(limit).offset(offset),
+
+      db.select({ count: sql<number>`count(*)` }).from(users),
+    ]);
+
+    const meta = PaginationHelper.buildMeta(page, limit, totalResult[0].count);
+
+    return { users: userList, meta };
+  }
+
   async findById(id: string): Promise<Omit<typeof users.$inferSelect, 'password'>> {
     const user = await db.query.users.findFirst({
       where: eq(users.id, id),
+      columns: {
+        password: false, // Don't return password
+      },
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new NotFoundError('User', USER_ERROR_CODES.NOT_FOUND);
     }
 
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return user;
   }
 
   async findByEmail(email: string): Promise<typeof users.$inferSelect> {
