@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { userService } from '@/features/users/services/user.service';
 import { tokenService } from './token.service';
-import { AppError } from '@/common/utils/errors';
+import { InvalidCredentialsError, RefreshTokenInvalidError } from '../errors/auth.errors';
 
 /**
  * Service handling user authentication operations.
@@ -37,14 +37,21 @@ export class AuthService {
    * @param email - User's email address
    * @param password - Plain text password to verify
    * @returns User object (without password) with access and refresh tokens
-   * @throws {AppError} If credentials are invalid
+   * @throws {InvalidCredentialsError} If credentials are invalid
    */
   async login(email: string, password: string) {
-    const user = await userService.findByEmail(email);
+    // Catch user not found error and convert to InvalidCredentialsError
+    // to avoid user enumeration
+    let user;
+    try {
+      user = await userService.findByEmail(email);
+    } catch (error) {
+      throw new InvalidCredentialsError();
+    }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-      throw new AppError('Invalid credentials', 401);
+      throw new InvalidCredentialsError();
     }
 
     const accessToken = tokenService.generateAccessToken(user.id, user.email);
@@ -67,10 +74,15 @@ export class AuthService {
    *
    * @param oldRefreshToken - The current refresh token
    * @returns New access and refresh tokens
-   * @throws {AppError} If refresh token is invalid, expired, or revoked
+   * @throws {RefreshTokenInvalidError} If refresh token is invalid, expired, or revoked
    */
   async refresh(oldRefreshToken: string) {
-    const userId = await tokenService.verifyRefreshToken(oldRefreshToken);
+    let userId;
+    try {
+      userId = await tokenService.verifyRefreshToken(oldRefreshToken);
+    } catch (error) {
+      throw new RefreshTokenInvalidError();
+    }
 
     const user = await userService.findById(userId);
 
