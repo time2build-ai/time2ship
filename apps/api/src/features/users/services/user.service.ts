@@ -98,6 +98,18 @@ export class UserService {
     await this.findById(id);
     await db.delete(users).where(eq(users.id, id));
   }
+
+  /**
+   * Updates a user's password
+   * @param userId - User's ID
+   * @param hashedPassword - New hashed password
+   */
+  async updatePassword(userId: string, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password: hashedPassword, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  }
 }
 
 export const userService = new UserService();

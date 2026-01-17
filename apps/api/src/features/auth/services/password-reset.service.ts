@@ -9,7 +9,6 @@ import { eq, and, gt, sql } from 'drizzle-orm';
 import {
   PasswordResetRateLimitError,
   InvalidOtpError,
-  // @ts-ignore - Will be used in next task
   InvalidResetTokenError,
 } from '../errors/password-reset.errors';
 
@@ -170,10 +169,51 @@ export class PasswordResetService {
   }
 
   /**
-   * Placeholder method - will be implemented in next step
+   * Resets user password using a valid reset token
+   * @param resetToken - JWT reset token from OTP verification
+   * @param newPassword - New password (plain text, will be hashed)
    */
-  async resetPassword(_resetToken: string, _newPassword: string): Promise<void> {
-    throw new Error('Not implemented');
+  async resetPassword(resetToken: string, newPassword: string): Promise<void> {
+    // Verify JWT
+    let payload: { email: string; type: string };
+    try {
+      payload = jwt.verify(resetToken, process.env.JWT_SECRET!) as { email: string; type: string };
+    } catch (error) {
+      throw new InvalidResetTokenError();
+    }
+
+    // Look up reset record by token
+    const records = await db
+      .select()
+      .from(passwordResets)
+      .where(
+        and(
+          eq(passwordResets.email, payload.email),
+          eq(passwordResets.resetToken, resetToken),
+          eq(passwordResets.used, false)
+        )
+      );
+
+    if (records.length === 0) {
+      throw new InvalidResetTokenError();
+    }
+
+    const record = records[0];
+
+    // Find user
+    const user = await userService.findByEmail(payload.email);
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update user password
+    await userService.updatePassword(user.id, hashedPassword);
+
+    // Mark reset record as used
+    await db
+      .update(passwordResets)
+      .set({ used: true })
+      .where(eq(passwordResets.id, record.id));
   }
 }
 

@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import {
   PasswordResetRateLimitError,
   InvalidOtpError,
+  InvalidResetTokenError,
 } from '../../errors/password-reset.errors';
 
 jest.mock('@/config/database');
@@ -239,6 +240,84 @@ describe('PasswordResetService', () => {
       await expect(
         service.verifyOTP('test@example.com', '123456')
       ).rejects.toThrow(InvalidOtpError);
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should reset password with valid token', async () => {
+      const mockPayload = { email: 'test@example.com', type: 'password-reset' };
+      const mockRecord = {
+        id: 'reset-123',
+        email: 'test@example.com',
+        resetToken: 'valid.reset.token',
+        used: false,
+      };
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
+        password: 'old_hash',
+      };
+
+      (jwt.verify as jest.Mock).mockReturnValue(mockPayload);
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([mockRecord]),
+        }),
+      });
+      (userService.findByEmail as jest.Mock).mockResolvedValue(mockUser);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('new_hash');
+      (db.update as jest.Mock).mockReturnValue({
+        set: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue(undefined),
+        }),
+      });
+
+      await service.resetPassword('valid.reset.token', 'NewPassword123!');
+
+      expect(jwt.verify).toHaveBeenCalledWith('valid.reset.token', process.env.JWT_SECRET);
+      expect(userService.updatePassword).toHaveBeenCalledWith('user-123', 'new_hash');
+      expect(db.update).toHaveBeenCalled(); // Mark reset record as used
+    });
+
+    it('should throw InvalidResetTokenError when JWT is invalid', async () => {
+      (jwt.verify as jest.Mock).mockImplementation(() => {
+        throw new Error('Invalid token');
+      });
+
+      await expect(
+        service.resetPassword('invalid.token', 'NewPassword123!')
+      ).rejects.toThrow(InvalidResetTokenError);
+    });
+
+    it('should throw InvalidResetTokenError when no record found', async () => {
+      const mockPayload = { email: 'test@example.com', type: 'password-reset' };
+
+      (jwt.verify as jest.Mock).mockReturnValue(mockPayload);
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([]),
+        }),
+      });
+
+      await expect(
+        service.resetPassword('valid.token', 'NewPassword123!')
+      ).rejects.toThrow(InvalidResetTokenError);
+    });
+
+    it('should throw InvalidResetTokenError when token already used', async () => {
+      const mockPayload = { email: 'test@example.com', type: 'password-reset' };
+
+      (jwt.verify as jest.Mock).mockReturnValue(mockPayload);
+      // When token is already used, the query won't find it (filters for used=false)
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([]), // No unused records found
+        }),
+      });
+
+      await expect(
+        service.resetPassword('valid.reset.token', 'NewPassword123!')
+      ).rejects.toThrow(InvalidResetTokenError);
     });
   });
 });
