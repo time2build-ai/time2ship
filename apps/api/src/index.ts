@@ -6,23 +6,21 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
-import apiRoutes from './routes';
+import { env } from './config/env';
+import featureRoutes from './features';
 
-// Load environment variables
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 3001;
+const PORT = env.PORT || 3001;
 
-// Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
-app.use(compression()); // Compress responses
-app.use(morgan('dev')); // HTTP request logger
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(helmet());
+app.use(cors());
+app.use(compression());
+app.use(morgan('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -31,18 +29,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api', apiRoutes);
+app.use('/api/v1', featureRoutes);
 
-// Error handlers (must be last)
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📍 Environment: ${env.NODE_ENV}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/v1/auth`);
+  console.log(`👥 User endpoints: http://localhost:${PORT}/api/v1/users`);
 });
 
 export default app;
