@@ -4,6 +4,12 @@ Before working on this application, review the architecture guidelines:
 
 - [Architecture Guidelines](./.claude/references/architecture.md) - Feature-based architecture, folder structure, naming conventions, and patterns
 
+## Skills
+
+Before working on this API, review the relevant skills:
+
+- [Express Best Practices](./.claude/skills/express-best-practices/SKILL.md) - Security, performance, and architecture guidelines for production-ready Express/TypeScript APIs
+
 ## Working with this API
 
 This is an Express + TypeScript API following a feature-based architecture with:
