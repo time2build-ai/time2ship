@@ -25,6 +25,7 @@ src/
 ├── features/              # Feature modules (vertical slices)
 │   ├── users/
 │   │   ├── routes/       # Express route handlers
+│   │   ├── controllers/  # HTTP request/response handling
 │   │   ├── services/     # Business logic
 │   │   ├── validators/   # Zod schemas
 │   │   ├── schemas/      # Drizzle schemas
@@ -65,6 +66,8 @@ features/feature-name/
 ├── routes/
 │   ├── index.ts
 │   └── feature-name.routes.ts
+├── controllers/
+│   └── feature-name.controller.ts
 ├── services/
 │   └── feature-name.service.ts
 ├── validators/
@@ -76,6 +79,7 @@ features/feature-name/
 ├── errors/                    # Optional
 │   └── feature-name.errors.ts
 └── __tests__/
+    ├── feature-name.controller.test.ts
     ├── feature-name.service.test.ts
     └── feature-name.routes.test.ts
 ```
@@ -108,18 +112,18 @@ export default router;
 **Responsibilities**:
 
 - Define HTTP endpoints
-- Extract request data
-- Call validation middleware
-- Invoke services
-- Send HTTP responses
+- Define middleware chains
+- Invoke controllers via asyncHandler
+- Pure routing configuration
 
 **Rules**:
 
 - ✅ MUST be thin - no business logic
-- ✅ MUST use `asyncHandler` for async
-- ✅ MUST validate via middleware
-- ❌ MUST NOT access database directly
-- ✅ MUST return consistent response format
+- ✅ MUST use controller methods (no inline functions)
+- ✅ MUST use `asyncHandler` for async controller methods
+- ✅ MUST bind controller methods when passing to asyncHandler
+- ❌ MUST NOT call services directly
+- ❌ MUST NOT contain inline async functions with business flow
 
 ### Services Layer (`features/{feature}/services/`)
 
@@ -139,6 +143,25 @@ export default router;
 - ✅ MUST be reusable across routes
 - ✅ CAN call other feature services (document dependencies)
 - ❌ MUST NOT contain SQL strings
+
+### Controllers Layer (`features/{feature}/controllers/`)
+
+**Responsibilities**:
+
+- Extract data from Express Request (params, query, body, user)
+- Call service methods with clean data
+- Format responses using ResponseHelper
+- Handle HTTP-specific concerns
+
+**Rules**:
+
+- ✅ MUST be thin - orchestration only
+- ✅ MUST extract data and pass primitives to services
+- ❌ MUST NOT contain business logic
+- ❌ MUST NOT access database directly
+- ✅ MUST use ResponseHelper for responses
+- ✅ MUST use class-based pattern with singleton export
+- ✅ MUST return Promise<void> (responses sent, not returned)
 
 ### Validators Layer (`features/{feature}/validators/`)
 
@@ -609,6 +632,8 @@ When adding functionality:
 
 - [ ] Feature folder with required subfolders
 - [ ] Thin routes (HTTP only)
+- [ ] Controller with HTTP-only logic
+- [ ] Routes use controller methods (no inline functions)
 - [ ] Business logic in services
 - [ ] Zod validators for inputs
 - [ ] Drizzle schema for DB tables
@@ -623,4 +648,4 @@ When adding functionality:
 
 ---
 
-**Version**: 1.0 | **Updated**: 2026-01-16
+**Version**: 1.1 | **Updated**: 2026-01-17
