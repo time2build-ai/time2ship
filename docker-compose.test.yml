@@ -46,26 +46,5 @@ services:
         condition: service_healthy
     command: sh -c "npm run db:migrate && npm run test:e2e:local"
 
-  # Client Service for E2E Testing
-  client-test:
-    build:
-      context: ./apps/client
-      dockerfile: Dockerfile.test
-    container_name: time2ship-client-test
-    restart: unless-stopped
-    environment:
-      NODE_ENV: test
-      NEXT_PUBLIC_API_URL: http://api-test:3001
-      CI: true
-    ports:
-      - "3001:3000"  # Different port to avoid conflicts with dev client
-    volumes:
-      - ./apps/client:/app
-      - /app/node_modules
-      - /app/.next
-    depends_on:
-      - api-test
-    command: sh -c "npm run build && npm run test"
-
 volumes:
   postgres_test_data:
