@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Skip dotenv in tests - test setup handles environment variables
+if (process.env.NODE_ENV !== 'test') {
+  dotenv.config();
+}
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

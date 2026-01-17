@@ -3,19 +3,6 @@ import { ZodError, ZodSchema } from 'zod';
 import { AppError } from '@/common/utils/errors';
 
 /**
- * Extended Request interface with validated data attached.
- * After successful validation, the validated property contains
- * strongly-typed body, params, and query objects.
- */
-export interface ValidatedRequest extends Request {
-  validated: {
-    body?: any;
-    params?: any;
-    query?: any;
-  };
-}
-
-/**
  * Express middleware factory for validating request data using Zod schemas.
  * Validates body, params, and query against the provided schema.
  * On success, attaches validated data to req.validated.
@@ -40,7 +27,7 @@ export interface ValidatedRequest extends Request {
  * });
  */
 export const validate = (schema: ZodSchema) => {
-  return (req: ValidatedRequest, _res: Response, next: NextFunction): void => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     try {
       const validated = schema.parse({
         body: req.body,

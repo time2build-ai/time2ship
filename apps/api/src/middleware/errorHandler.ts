@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '@/common/utils/errors';
 
+// Re-export AppError for convenience
+export { AppError };
+
 /**
  * Global error handling middleware for Express application.
  * Catches all errors passed via next(error) and formats consistent error responses.
@@ -19,9 +22,9 @@ import { AppError } from '@/common/utils/errors';
  */
 export const errorHandler = (
   err: Error | AppError,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): void => {
   if (err instanceof AppError) {
     res.status(err.statusCode).json({

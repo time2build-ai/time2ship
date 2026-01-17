@@ -7,7 +7,7 @@ const router = Router();
 router.use('/example', exampleRoutes);
 
 // Root API endpoint
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   res.json({
     success: true,
     message: 'API is running',

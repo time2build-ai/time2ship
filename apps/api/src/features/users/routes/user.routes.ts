@@ -22,7 +22,7 @@ router.put(
   '/:id',
   validate(updateUserSchema),
   asyncHandler(async (req: AuthRequest, res) => {
-    const user = await userService.update(req.params.id, req.validated.body);
+    const user = await userService.update(req.params.id, req.validated!.body);
     res.json({ success: true, data: user });
   })
 );

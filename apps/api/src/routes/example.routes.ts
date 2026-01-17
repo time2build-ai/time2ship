@@ -14,7 +14,7 @@ interface ExampleData {
 // GET /api/example
 router.get(
   '/',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (_req: Request, res: Response) => {
     const response: ApiResponse<ExampleData[]> = {
       success: true,
       data: [
