@@ -21,6 +21,18 @@ export class UserController {
     const { users, meta } = await userService.findAll(req.query);
     ResponseHelper.success(res, users, undefined, meta);
   }
+
+  /**
+   * Retrieves a single user by their ID.
+   *
+   * @param req - Express request with user ID in params
+   * @param res - Express response object
+   * @returns The requested user
+   */
+  async getById(req: Request, res: Response): Promise<void> {
+    const user = await userService.findById(req.params.id);
+    ResponseHelper.success(res, user);
+  }
 }
 
 export const userController = new UserController();

@@ -38,4 +38,23 @@ describe('UserController', () => {
       expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockUsers, undefined, mockMeta);
     });
   });
+
+  describe('getById', () => {
+    it('should call userService.findById and return success response', async () => {
+      const mockUser = {
+        id: '123',
+        email: 'test@example.com',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      mockReq.params = { id: '123' };
+
+      (userService.findById as jest.Mock).mockResolvedValue(mockUser);
+
+      await userController.getById(mockReq as Request, mockRes as Response);
+
+      expect(userService.findById).toHaveBeenCalledWith('123');
+      expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockUser);
+    });
+  });
 });
