@@ -3,13 +3,52 @@
 # Script to review code changes with Claude Code's code-simplifier skill
 # Usage: ./scripts/review-changes.sh [base-branch]
 
-set -e
-
 BASE_BRANCH="${1:-origin/main}"
 
 echo "🔍 Code Review with Claude Code"
 echo "================================"
 echo ""
+
+# Check if base branch exists
+if ! git rev-parse --verify "$BASE_BRANCH" >/dev/null 2>&1; then
+    echo "⚠️  Base branch '$BASE_BRANCH' not found."
+    echo ""
+
+    # Try to find an alternative base branch
+    if git rev-parse --verify origin/development >/dev/null 2>&1; then
+        BASE_BRANCH="origin/development"
+        echo "Using alternative: $BASE_BRANCH"
+    elif git rev-parse --verify main >/dev/null 2>&1; then
+        BASE_BRANCH="main"
+        echo "Using alternative: $BASE_BRANCH"
+    elif git rev-parse --verify master >/dev/null 2>&1; then
+        BASE_BRANCH="master"
+        echo "Using alternative: $BASE_BRANCH"
+    else
+        # No base branch found - this is likely the first push
+        echo "No base branch found. This appears to be the first push."
+        echo "Reviewing all staged changes instead..."
+        echo ""
+
+        # Check if there are any staged changes
+        if git diff --cached --quiet; then
+            echo "✅ No staged changes to review."
+            exit 0
+        fi
+
+        echo "📝 Staged files:"
+        git diff --cached --name-only
+        echo ""
+
+        # For first push, just show a message and skip review
+        echo "🤖 Skipping code review for initial repository setup."
+        echo ""
+        echo "For subsequent pushes, code review will compare against remote branches."
+        exit 0
+    fi
+    echo ""
+fi
+
 echo "Comparing against: $BASE_BRANCH"
 echo ""
 
