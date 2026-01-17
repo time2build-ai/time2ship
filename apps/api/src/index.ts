@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
+import { requestIdMiddleware } from './middleware/requestId';
 import { env } from './config/env';
 import featureRoutes from './features';
 
@@ -15,6 +16,7 @@ const app: Application = express();
 const PORT = env.PORT || 3001;
 
 app.use(helmet());
+app.use(requestIdMiddleware); // Add request ID to every request
 app.use(cors());
 app.use(compression());
 app.use(morgan('dev'));
