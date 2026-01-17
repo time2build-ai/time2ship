@@ -1,6 +1,15 @@
 import { PasswordResetService } from '../password-reset.service';
+import { db } from '@/config/database';
+import { userService } from '@/features/users/services/user.service';
+import { emailService } from '@/common/services/email.service';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { PasswordResetRateLimitError } from '../../errors/password-reset.errors';
 
+jest.mock('@/config/database');
+jest.mock('@/features/users/services/user.service');
+jest.mock('@/common/services/email.service');
+jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
 
 describe('PasswordResetService', () => {
@@ -39,6 +48,105 @@ describe('PasswordResetService', () => {
         { expiresIn: '10m' }
       );
       expect(token).toBe(mockToken);
+    });
+  });
+
+  describe('checkRateLimit', () => {
+    it('should not throw error when under rate limit', async () => {
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([{}, {}]), // 2 requests
+        }),
+      });
+
+      await expect(
+        (service as any).checkRateLimit('test@example.com')
+      ).resolves.not.toThrow();
+    });
+
+    it('should throw PasswordResetRateLimitError when rate limit exceeded', async () => {
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([{}, {}, {}]), // 3 requests
+        }),
+      });
+
+      await expect(
+        (service as any).checkRateLimit('test@example.com')
+      ).rejects.toThrow(PasswordResetRateLimitError);
+    });
+  });
+
+  describe('cleanupOldRecords', () => {
+    it('should delete expired and used records for email', async () => {
+      const mockWhere = jest.fn().mockResolvedValue(undefined);
+      (db.delete as jest.Mock).mockReturnValue({
+        where: mockWhere,
+      });
+
+      await (service as any).cleanupOldRecords('test@example.com');
+
+      expect(db.delete).toHaveBeenCalled();
+      expect(mockWhere).toHaveBeenCalled();
+    });
+  });
+
+  describe('requestPasswordReset', () => {
+    it('should send OTP email when user exists', async () => {
+      const mockUser = { id: 'user-123', email: 'test@example.com' };
+
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([]), // No recent requests
+        }),
+      });
+      (db.delete as jest.Mock).mockReturnValue({
+        where: jest.fn().mockResolvedValue(undefined),
+      });
+      (userService.findByEmail as jest.Mock).mockResolvedValue(mockUser);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_otp');
+      (db.insert as jest.Mock).mockReturnValue({
+        values: jest.fn().mockResolvedValue(undefined),
+      });
+      (emailService.sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
+
+      await service.requestPasswordReset('test@example.com');
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        'test@example.com',
+        expect.objectContaining({
+          email: 'test@example.com',
+          resetToken: expect.stringMatching(/^\d{6}$/), // OTP is passed as resetToken
+        })
+      );
+    });
+
+    it('should not send email when user does not exist (silent success)', async () => {
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([]),
+        }),
+      });
+      (db.delete as jest.Mock).mockReturnValue({
+        where: jest.fn().mockResolvedValue(undefined),
+      });
+      (userService.findByEmail as jest.Mock).mockRejectedValue(new Error('User not found'));
+
+      await service.requestPasswordReset('nonexistent@example.com');
+
+      expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+    });
+
+    it('should throw PasswordResetRateLimitError when rate limited', async () => {
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([{}, {}, {}]), // 3 requests
+        }),
+      });
+
+      await expect(
+        service.requestPasswordReset('test@example.com')
+      ).rejects.toThrow(PasswordResetRateLimitError);
     });
   });
 });
