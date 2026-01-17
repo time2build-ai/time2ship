@@ -39,15 +39,14 @@ Husky is configured at the root level of the monorepo and applies hooks to both 
 
 **Location**: `.husky/pre-push`
 
-**Purpose**: Offers optional code review with code-simplifier, then runs API end-to-end tests before allowing a push to remote.
+**Purpose**: Automatically runs code review with code-simplifier, then runs API end-to-end tests before allowing a push to remote.
 
 **What it does** (in order):
-1. **Interactive Code Review (Optional - runs FIRST)**:
-   - Prompts you to run code review with Claude Code's code-simplifier skill
+1. **Code Review (Automatic - runs FIRST)**:
+   - Automatically runs Claude Code's code-simplifier skill on your changes
    - Analyzes your git diff and suggests simplifications
-   - You can choose to skip this step by pressing 'N'
-   - If you make changes during review:
-     - You'll be prompted: "Did you make changes that need to be committed?"
+   - Shows suggestions for improving code quality
+   - After review, prompts: "Did you make any changes based on the review?"
      - If yes: Push aborts, you commit changes and push again (triggers tests on new code)
      - If no: Continues to tests
 
@@ -112,18 +111,18 @@ git commit -m "WIP"
    - Linting and type checking on pre-commit
    - Message format validation on commit-msg
 5. Push your changes: `git push`
-6. The pre-push hook will run:
-   - **Optional**: Prompt to run code-simplifier review
-   - **Required**: API e2e tests via Docker
+6. The pre-push hook will run automatically:
+   - **Step 1**: Code-simplifier review (automatic)
+   - **Step 2**: API e2e tests via Docker (required)
 
 ### Code Review Workflow
 
-**During Push** (Interactive):
+**During Push** (Automatic):
 ```bash
 git push
-# → Step 1: Prompts "Run code review? [y/N]"
-# → If 'y': Launches Claude Code with code-simplifier skill
-# → After review: Prompts "Did you make changes that need to be committed? [y/N]"
+# → Step 1: Automatically runs code-simplifier on your changes
+# → Shows improvement suggestions
+# → Prompts: "Did you make any changes based on the review? [y/N]"
 #   - If 'y': Aborts push, you commit changes and push again
 #   - If 'n': Continues to tests
 # → Step 2: Runs e2e tests
@@ -131,10 +130,11 @@ git push
 ```
 
 **Important**: The workflow ensures:
-1. Code review happens FIRST (before tests)
-2. If you make changes during review, you must commit them
-3. Tests run AFTER all changes are committed
-4. This prevents pushing untested code
+1. Code review ALWAYS runs first (automatically, no prompting)
+2. You see improvement suggestions before tests run
+3. If you make changes based on suggestions, you must commit them
+4. Tests run AFTER all changes are committed
+5. This prevents pushing untested code
 
 **Manual Review** (Anytime):
 ```bash

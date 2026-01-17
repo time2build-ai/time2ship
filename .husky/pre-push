@@ -12,52 +12,43 @@ fi
 echo "📊 New commits detected!"
 echo ""
 
-# Step 1: Offer code review BEFORE running tests
-echo "Would you like to run code review with code-simplifier?"
-echo "(Recommended: Review and improve code before running tests)"
+# Step 1: Run code review automatically
+echo "🤖 Running code review with code-simplifier..."
 echo ""
-printf "Run code review? [y/N] "
 
-# Read user input (only in interactive terminal)
+.husky/scripts/review-changes.sh
+
+echo ""
+echo "⚠️  Code review complete!"
+echo ""
+
+# Only prompt if terminal is interactive
 if [ -t 0 ]; then
-    read -r response
-    case "$response" in
-        [yY][eE][sS]|[yY])
-            echo ""
-            echo "🤖 Running code review..."
-            .husky/scripts/review-changes.sh
-            echo ""
-            echo "⚠️  If you made changes based on the review:"
-            echo "   1. Stage your changes: git add ."
-            echo "   2. Commit them: git commit -m \"refactor: apply code review suggestions\""
-            echo "   3. Try pushing again"
-            echo ""
-            printf "Did you make changes that need to be committed? [y/N] "
-            read -r made_changes
-            case "$made_changes" in
-                [yY][eE][sS]|[yY])
-                    echo ""
-                    echo "Please commit your changes and push again."
-                    echo "Aborting push..."
-                    exit 1
-                    ;;
-                *)
-                    echo "Continuing with push..."
-                    ;;
-            esac
-            ;;
-        *)
-            echo "Skipping code review."
-            ;;
-    esac
+    echo "If code-simplifier suggested changes:"
+    echo "  1. Review the suggestions above"
+    echo "  2. Make improvements to your code if needed"
+    echo "  3. Stage changes: git add ."
+    echo "  4. Commit: git commit -m \"refactor: apply code review suggestions\""
+    echo "  5. Push again to run tests on improved code"
+    echo ""
+    read -p "Did you make any changes based on the review? [y/N] " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "Please commit your changes and push again."
+        echo "This ensures tests run on your improved code."
+        exit 1
+    fi
 else
-    echo "Non-interactive terminal. Skipping code review prompt."
-    echo "Run '.husky/scripts/review-changes.sh' manually to review changes."
+    echo "Non-interactive terminal detected."
+    echo "If you made changes based on the review, commit them and push again."
+    echo "Continuing to tests..."
 fi
 
-# Step 2: Run tests AFTER code review (or if review was skipped)
+# Step 2: Run tests after code review
 echo ""
 echo "🧪 Running API e2e tests..."
+echo ""
 
 # Change to API directory and run e2e tests
 cd apps/api && npm run test:e2e
