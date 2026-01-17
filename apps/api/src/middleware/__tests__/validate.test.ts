@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { validate } from '../validate';
-import { AppError } from '@/common/utils/errors';
 
 describe('Validation Middleware', () => {
   let mockRequest: Partial<Request>;
@@ -47,6 +46,6 @@ describe('Validation Middleware', () => {
     const middleware = validate(schema);
     middleware(mockRequest as any, mockResponse as Response, nextFunction);
 
-    expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
+    expect(nextFunction).toHaveBeenCalledWith(expect.any(ZodError));
   });
 });
