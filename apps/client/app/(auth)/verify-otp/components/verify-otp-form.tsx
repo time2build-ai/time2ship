@@ -26,19 +26,6 @@ export function VerifyOTPForm(): React.ReactElement {
   const [otp, setOtp] = useState('');
   const [state, formAction] = useActionState(verifyOtpAction, null);
 
-  // Don't redirect immediately - wait to ensure email param is missing
-  // (Prevents redirect during initial render before searchParams loads)
-  useEffect(() => {
-    // Only redirect if we've mounted and there's definitely no email
-    const timeoutId = setTimeout(() => {
-      if (!email) {
-        router.push('/forgot-password');
-      }
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [email, router]);
-
   useEffect(() => {
     if (state?.error) {
       toast.error(state.error);
