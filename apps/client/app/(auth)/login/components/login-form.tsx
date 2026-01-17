@@ -28,10 +28,12 @@ export function LoginForm(): React.ReactElement {
   }, [state?.error]);
 
   return (
-    <div className="w-full max-w-md space-y-8">
+    <div className="w-full max-w-lg space-y-8 animate-fade-up">
       <div className="text-center space-y-3">
-        <h1 className="text-4xl font-bold tracking-tighter">Welcome back</h1>
-        <p className="text-base text-surface-dim">
+        <h1 className="text-4xl font-bold tracking-tighter leading-none">
+          Welcome back
+        </h1>
+        <p className="text-lg text-surface-dim leading-relaxed">
           Sign in to your account
         </p>
       </div>
@@ -57,10 +59,19 @@ export function LoginForm(): React.ReactElement {
           error={state?.errors?.password?.[0]}
         />
 
+        <div className="text-right">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-accent-primary hover:text-accent-primary-soft transition-colors duration-150 ease-out"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
         <SubmitButton />
       </form>
 
-      <p className="text-center text-sm text-surface-dim">
+      <p className="text-center text-sm text-surface-dim tracking-wide">
         Don't have an account?{' '}
         <Link
           href="/register"
