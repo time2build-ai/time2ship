@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { eq } from 'drizzle-orm';
 import { testDb } from './setup';
 import { users } from '@/features/users/schemas/user.schema';
 import { refreshTokens } from '@/features/auth/schemas/refresh-token.schema';
@@ -64,8 +65,15 @@ export async function generateTestTokens(userId: string, email: string) {
   const accessToken = tokenService.generateAccessToken(userId, email);
   const refreshToken = tokenService.generateRefreshToken(userId);
 
-  // Store refresh token in database
-  await tokenService.storeRefreshToken(refreshToken, userId);
+  // Store refresh token in test database (not using tokenService to avoid production db)
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+
+  await testDb.insert(refreshTokens).values({
+    token: refreshToken,
+    userId,
+    expiresAt,
+  });
 
   return { accessToken, refreshToken };
 }
@@ -81,7 +89,20 @@ export async function createAuthenticatedTestUser(
   email: string = 'auth@example.com',
   password: string = 'Password123!'
 ) {
+  // First, create the user and wait for it to be committed
   const user = await createTestUser(email, password);
+
+  // Verify the user exists in the database before generating tokens
+  const [verifyUser] = await testDb
+    .select()
+    .from(users)
+    .where(eq(users.id, user.id));
+
+  if (!verifyUser) {
+    throw new Error(`User ${user.id} was not found in database after creation`);
+  }
+
+  // Now generate tokens for the verified user
   const tokens = await generateTestTokens(user.id, user.email);
 
   return {
