@@ -9,7 +9,7 @@ const forgotPasswordSchema = z.object({
 export async function forgotPasswordAction(
   prevState: unknown,
   formData: FormData
-): Promise<{ error?: string; errors?: Record<string, string[]>; success?: boolean }> {
+): Promise<{ error?: string; errors?: Record<string, string[]>; success?: boolean; email?: string }> {
   const result = forgotPasswordSchema.safeParse({
     email: formData.get('email'),
   });
@@ -34,7 +34,7 @@ export async function forgotPasswordAction(
       return { error: data.message || 'Failed to send reset code' };
     }
 
-    return { success: true };
+    return { success: true, email: result.data.email };
   } catch (error) {
     return { error: 'Network error. Please try again.' };
   }
