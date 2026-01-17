@@ -4,7 +4,10 @@ import { userService } from '@/features/users/services/user.service';
 import { emailService } from '@/common/services/email.service';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { PasswordResetRateLimitError } from '../../errors/password-reset.errors';
+import {
+  PasswordResetRateLimitError,
+  InvalidOtpError,
+} from '../../errors/password-reset.errors';
 
 jest.mock('@/config/database');
 jest.mock('@/features/users/services/user.service');
@@ -147,6 +150,95 @@ describe('PasswordResetService', () => {
       await expect(
         service.requestPasswordReset('test@example.com')
       ).rejects.toThrow(PasswordResetRateLimitError);
+    });
+  });
+
+  describe('verifyOTP', () => {
+    it('should verify OTP and return reset token', async () => {
+      const mockRecord = {
+        id: 'reset-123',
+        email: 'test@example.com',
+        otp: 'hashed_otp',
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min future
+        used: false,
+        resetToken: null,
+        createdAt: new Date(),
+      };
+
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([mockRecord]),
+        }),
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (jwt.sign as jest.Mock).mockReturnValue('mock.reset.token');
+      (db.update as jest.Mock).mockReturnValue({
+        set: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue(undefined),
+        }),
+      });
+
+      const token = await service.verifyOTP('test@example.com', '123456');
+
+      expect(token).toBe('mock.reset.token');
+      expect(db.update).toHaveBeenCalled();
+    });
+
+    it('should throw InvalidOtpError when OTP is incorrect', async () => {
+      const mockRecord = {
+        id: 'reset-123',
+        email: 'test@example.com',
+        otp: 'hashed_otp',
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        used: false,
+        resetToken: null,
+        createdAt: new Date(),
+      };
+
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([mockRecord]),
+        }),
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(
+        service.verifyOTP('test@example.com', '999999')
+      ).rejects.toThrow(InvalidOtpError);
+    });
+
+    it('should throw InvalidOtpError when no record found', async () => {
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([]),
+        }),
+      });
+
+      await expect(
+        service.verifyOTP('test@example.com', '123456')
+      ).rejects.toThrow(InvalidOtpError);
+    });
+
+    it('should throw InvalidOtpError when OTP is already used', async () => {
+      const mockRecord = {
+        id: 'reset-123',
+        email: 'test@example.com',
+        otp: 'hashed_otp',
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        used: true, // Already used
+        resetToken: 'old.token',
+        createdAt: new Date(),
+      };
+
+      (db.select as jest.Mock).mockReturnValue({
+        from: jest.fn().mockReturnValue({
+          where: jest.fn().mockResolvedValue([mockRecord]),
+        }),
+      });
+
+      await expect(
+        service.verifyOTP('test@example.com', '123456')
+      ).rejects.toThrow(InvalidOtpError);
     });
   });
 });

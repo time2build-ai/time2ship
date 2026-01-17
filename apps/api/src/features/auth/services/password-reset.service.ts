@@ -8,7 +8,6 @@ import { emailService } from '@/common/services/email.service';
 import { eq, and, gt, sql } from 'drizzle-orm';
 import {
   PasswordResetRateLimitError,
-  // @ts-ignore - Will be used in next task
   InvalidOtpError,
   // @ts-ignore - Will be used in next task
   InvalidResetTokenError,
@@ -37,7 +36,6 @@ export class PasswordResetService {
    * Generates a short-lived JWT reset token
    * @private
    */
-  // @ts-ignore - Will be used in next task
   private generateResetToken(email: string): string {
     return jwt.sign(
       { email, type: 'password-reset' },
@@ -126,12 +124,54 @@ export class PasswordResetService {
   }
 
   /**
-   * Placeholder methods - will be implemented in next steps
+   * Verifies an OTP and generates a reset token
+   * @param email - User's email address
+   * @param otp - 6-digit OTP code
+   * @returns Reset token (JWT)
    */
-  async verifyOTP(_email: string, _otp: string): Promise<string> {
-    throw new Error('Not implemented');
+  async verifyOTP(email: string, otp: string): Promise<string> {
+    // Look up non-expired, unused OTP record
+    const records = await db
+      .select()
+      .from(passwordResets)
+      .where(
+        and(
+          eq(passwordResets.email, email),
+          gt(passwordResets.expiresAt, sql`NOW()`),
+          eq(passwordResets.used, false)
+        )
+      );
+
+    if (records.length === 0) {
+      throw new InvalidOtpError();
+    }
+
+    const record = records[0];
+
+    // Verify OTP
+    const isValid = await bcrypt.compare(otp, record.otp);
+    if (!isValid) {
+      throw new InvalidOtpError();
+    }
+
+    // Generate reset token
+    const resetToken = this.generateResetToken(email);
+
+    // Mark OTP as used and store reset token
+    await db
+      .update(passwordResets)
+      .set({
+        used: true,
+        resetToken,
+      })
+      .where(eq(passwordResets.id, record.id));
+
+    return resetToken;
   }
 
+  /**
+   * Placeholder method - will be implemented in next step
+   */
   async resetPassword(_resetToken: string, _newPassword: string): Promise<void> {
     throw new Error('Not implemented');
   }
