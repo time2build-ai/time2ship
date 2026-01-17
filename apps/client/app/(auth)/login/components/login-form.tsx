@@ -1,7 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
+import { useActionState, useEffect } from 'react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { Input } from '@/shared/components/ui/input';
@@ -18,7 +18,7 @@ function SubmitButton() {
 }
 
 export function LoginForm() {
-  const [state, formAction] = useFormState(loginAction, null);
+  const [state, formAction] = useActionState(loginAction, null);
 
   useEffect(() => {
     if (state?.error) {

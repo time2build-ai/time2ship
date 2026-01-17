@@ -1,0 +1,75 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: time2ship-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: time2ship
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Service
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    container_name: time2ship-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: time2ship
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_ACCESS_SECRET: your-32-character-secret-change-me-in-production
+      JWT_REFRESH_SECRET: another-32-character-secret-change-me-too
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\""]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    command: npm run dev
+
+  # Client Service (Next.js)
+  client:
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile.dev
+    container_name: time2ship-client
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/client:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    command: npm run dev
+
+volumes:
+  postgres_data:

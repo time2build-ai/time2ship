@@ -16,6 +16,16 @@ const envSchema = z.object({
   DB_PASSWORD: z.string(),
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info'),
+
+  // Email configuration
+  EMAIL_HOST: z.string().default('smtp.gmail.com'),
+  EMAIL_PORT: z.string().default('587'),
+  EMAIL_SECURE: z.string().default('false'),
+  EMAIL_USER: z.string().optional(),
+  EMAIL_PASSWORD: z.string().optional(),
+  EMAIL_FROM: z.string().email().default('noreply@time2ship.com'),
+  EMAIL_FROM_NAME: z.string().default('Time2Ship'),
 });
 
 export type Env = z.infer<typeof envSchema>;

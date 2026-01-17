@@ -36,10 +36,37 @@ type LayoutConfig<Route extends LayoutRoutes = LayoutRoutes> = {
 }
 
 
-// Validate ../../app/page.tsx
+// Validate ../../app/(app)/app/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/app">> = Specific
+  const handler = {} as typeof import("../../app/(app)/app/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/(auth)/login/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/login">> = Specific
+  const handler = {} as typeof import("../../app/(auth)/login/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/(auth)/register/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/register">> = Specific
+  const handler = {} as typeof import("../../app/(auth)/register/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/(landing)/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/">> = Specific
-  const handler = {} as typeof import("../../app/page.js")
+  const handler = {} as typeof import("../../app/(landing)/page.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -50,6 +77,33 @@ type LayoutConfig<Route extends LayoutRoutes = LayoutRoutes> = {
 
 
 
+
+// Validate ../../app/(app)/layout.tsx
+{
+  type __IsExpected<Specific extends LayoutConfig<"/">> = Specific
+  const handler = {} as typeof import("../../app/(app)/layout.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/(auth)/layout.tsx
+{
+  type __IsExpected<Specific extends LayoutConfig<"/">> = Specific
+  const handler = {} as typeof import("../../app/(auth)/layout.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/(landing)/layout.tsx
+{
+  type __IsExpected<Specific extends LayoutConfig<"/">> = Specific
+  const handler = {} as typeof import("../../app/(landing)/layout.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
 
 // Validate ../../app/layout.tsx
 {

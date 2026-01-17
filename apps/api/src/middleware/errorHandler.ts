@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 import { AppError } from '@/common/utils/errors';
 import { ResponseHelper } from '@/common/helpers/response';
 import { ERROR_CODES } from '@/common/constants/error-codes';
+import logger from '@/common/utils/logger';
 
 // Re-export AppError for convenience
 export { AppError };
@@ -28,13 +29,37 @@ export { AppError };
  */
 export const errorHandler = (
   err: Error | AppError | ZodError,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void => {
-  // Log error for debugging (in development)
-  if (process.env.NODE_ENV !== 'production') {
-    console.error('Error:', err);
+  // Log error with appropriate level
+  const logMeta = {
+    requestId: res.locals.requestId,
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+  };
+
+  if (err instanceof ZodError) {
+    logger.warn('Validation error', { ...logMeta, error: err.issues });
+  } else if (err instanceof AppError) {
+    // Log operational errors as warnings, except 5xx errors
+    const logLevel = err.statusCode >= 500 ? 'error' : 'warn';
+    logger.log(logLevel, err.message, {
+      ...logMeta,
+      statusCode: err.statusCode,
+      code: err.code,
+      details: err.details,
+      stack: err.stack,
+    });
+  } else {
+    // Log unexpected errors with full stack trace
+    logger.error('Unexpected error', {
+      ...logMeta,
+      error: err.message,
+      stack: err.stack,
+    });
   }
 
   // Handle Zod validation errors
@@ -70,8 +95,6 @@ export const errorHandler = (
   }
 
   // Handle unexpected errors
-  console.error('Unexpected error:', err);
-
   const message =
     process.env.NODE_ENV === 'production'
       ? 'Internal server error'

@@ -2,6 +2,19 @@ import bcrypt from 'bcrypt';
 import { userService } from '@/features/users/services/user.service';
 import { tokenService } from './token.service';
 import { InvalidCredentialsError, RefreshTokenInvalidError } from '../errors/auth.errors';
+import { emailService } from '@/common/services/email.service';
+import type { User } from '@/features/users/schemas/user.schema';
+
+type UserWithoutPassword = Omit<User, 'password'>;
+
+interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+interface AuthResponse extends AuthTokens {
+  user: UserWithoutPassword;
+}
 
 /**
  * Service handling user authentication operations.
@@ -16,13 +29,19 @@ export class AuthService {
    * @returns User object with access and refresh tokens
    * @throws {AppError} If email is already registered
    */
-  async register(email: string, password: string) {
+  async register(email: string, password: string): Promise<AuthResponse> {
     const user = await userService.create(email, password);
 
     const accessToken = tokenService.generateAccessToken(user.id, user.email);
     const refreshToken = tokenService.generateRefreshToken(user.id);
 
     await tokenService.storeRefreshToken(refreshToken, user.id);
+
+    // Send welcome email (fire-and-forget pattern - don't await)
+    // Following perf-avoid-blocking rule: non-critical operations should not block the response
+    emailService.sendWelcomeEmail(user.email, { email: user.email }).catch(() => {
+      // Error is already logged in emailService, no need to rethrow
+    });
 
     return {
       user,
@@ -39,7 +58,7 @@ export class AuthService {
    * @returns User object (without password) with access and refresh tokens
    * @throws {InvalidCredentialsError} If credentials are invalid
    */
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<AuthResponse> {
     // Catch user not found error and convert to InvalidCredentialsError
     // to avoid user enumeration
     let user;
@@ -76,7 +95,7 @@ export class AuthService {
    * @returns New access and refresh tokens
    * @throws {RefreshTokenInvalidError} If refresh token is invalid, expired, or revoked
    */
-  async refresh(oldRefreshToken: string) {
+  async refresh(oldRefreshToken: string): Promise<AuthTokens> {
     let userId;
     try {
       userId = await tokenService.verifyRefreshToken(oldRefreshToken);

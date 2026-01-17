@@ -1,18 +1,18 @@
-import { getCurrentUser } from '@/shared/lib/auth/session';
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
 import type { Metadata } from 'next';
+
+import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/card';
+import { getCurrentUser } from '@/shared/lib/auth/session';
 
 export const metadata: Metadata = {
   title: 'Dashboard | Time2Ship',
   description: 'Your application dashboard',
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage(): Promise<React.ReactElement> {
   const user = await getCurrentUser();
 
   return (
     <div className="space-y-6">
-      {/* Welcome section */}
       <div>
         <h1 className="text-3xl font-bold">Welcome back, {user?.email}!</h1>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
@@ -20,7 +20,6 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>

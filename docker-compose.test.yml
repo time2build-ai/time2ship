@@ -1,0 +1,71 @@
+services:
+  # Test PostgreSQL Database
+  db-test:
+    image: postgres:16-alpine
+    container_name: time2ship-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: time2ship_test
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts with dev DB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    tmpfs:
+      - /var/lib/postgresql/data  # Use tmpfs for faster tests and no persistence
+
+  # API Service for Testing
+  api-test:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: builder  # Use builder stage for testing
+    container_name: time2ship-api-test
+    environment:
+      NODE_ENV: test
+      PORT: 3001
+      DB_HOST: db-test
+      DB_PORT: 5432
+      DB_NAME: time2ship_test
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_ACCESS_SECRET: test-access-secret-for-e2e-testing-only
+      JWT_REFRESH_SECRET: test-refresh-secret-for-e2e-testing-only
+    ports:
+      - "3002:3001"  # Different port to avoid conflicts with dev API
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+      - /app/dist
+    depends_on:
+      db-test:
+        condition: service_healthy
+    command: sh -c "npm run db:migrate && npm run test:e2e:local"
+
+  # Client Service for E2E Testing
+  client-test:
+    build:
+      context: ./apps/client
+      dockerfile: Dockerfile.test
+    container_name: time2ship-client-test
+    restart: unless-stopped
+    environment:
+      NODE_ENV: test
+      NEXT_PUBLIC_API_URL: http://api-test:3001
+      CI: true
+    ports:
+      - "3001:3000"  # Different port to avoid conflicts with dev client
+    volumes:
+      - ./apps/client:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api-test
+    command: sh -c "npm run build && npm run test"
+
+volumes:
+  postgres_test_data:
