@@ -19,7 +19,9 @@ export async function forgotPasswordAction(
   }
 
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    // Use API_URL for server-side requests (Docker container-to-container)
+    // Fall back to NEXT_PUBLIC_API_URL for local development outside Docker
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const response = await fetch(`${apiUrl}/api/v1/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
