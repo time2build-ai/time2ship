@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { env } from './env';
+import * as userSchema from '@/features/users/schemas/user.schema';
 
 /**
  * PostgreSQL connection pool for database queries.
@@ -22,4 +23,6 @@ const pool = new Pool({
  * import { db } from '@/config/database';
  * const users = await db.query.users.findMany();
  */
-export const db = drizzle(pool);
+export const db = drizzle(pool, {
+  schema: { ...userSchema },
+});
