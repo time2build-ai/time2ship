@@ -76,4 +76,19 @@ describe('AuthController', () => {
       expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, mockResult);
     });
   });
+
+  describe('logout', () => {
+    it('should call authService.logout and return success response with message', async () => {
+      mockReq.validated = {
+        body: { refreshToken: 'refresh-token' }
+      };
+
+      (authService.logout as jest.Mock).mockResolvedValue(undefined);
+
+      await authController.logout(mockReq as Request, mockRes as Response);
+
+      expect(authService.logout).toHaveBeenCalledWith('refresh-token');
+      expect(ResponseHelper.success).toHaveBeenCalledWith(mockRes, null, 'Logged out successfully');
+    });
+  });
 });

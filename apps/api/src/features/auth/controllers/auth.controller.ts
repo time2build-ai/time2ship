@@ -45,6 +45,17 @@ export class AuthController {
     const result = await authService.refresh(req.validated!.body.refreshToken);
     ResponseHelper.success(res, result);
   }
+
+  /**
+   * Logs out a user by revoking their refresh token.
+   *
+   * @param req - Express request with validated body containing refresh token
+   * @param res - Express response object
+   */
+  async logout(req: Request, res: Response): Promise<void> {
+    await authService.logout(req.validated!.body.refreshToken);
+    ResponseHelper.success(res, null, 'Logged out successfully');
+  }
 }
 
 export const authController = new AuthController();
