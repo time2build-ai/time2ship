@@ -18,6 +18,6 @@ This is an Express + TypeScript API following a feature-based architecture with:
 - **Strict TypeScript**: No `any` types, explicit return types required
 - **Drizzle ORM**: Database access and schema management
 - **Zod Validation**: Request validation at API boundaries
-- **Layered Approach**: Routes → Services → Database
+- **Layered Approach**: Routes → Controllers → Services → Database
 
 Always refer to the architecture documentation for detailed rules and patterns.
