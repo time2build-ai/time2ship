@@ -12,40 +12,7 @@ fi
 echo "📊 New commits detected!"
 echo ""
 
-# Step 1: Run code review automatically
-echo "🤖 Running code review with code-simplifier..."
-echo ""
-
-.husky/scripts/review-changes.sh
-
-echo ""
-echo "⚠️  Code review complete!"
-echo ""
-
-# Only prompt if terminal is interactive
-if [ -t 0 ]; then
-    echo "If code-simplifier suggested changes:"
-    echo "  1. Review the suggestions above"
-    echo "  2. Make improvements to your code if needed"
-    echo "  3. Stage changes: git add ."
-    echo "  4. Commit: git commit -m \"refactor: apply code review suggestions\""
-    echo "  5. Push again to run tests on improved code"
-    echo ""
-    read -p "Did you make any changes based on the review? [y/N] " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo ""
-        echo "Please commit your changes and push again."
-        echo "This ensures tests run on your improved code."
-        exit 1
-    fi
-else
-    echo "Non-interactive terminal detected."
-    echo "If you made changes based on the review, commit them and push again."
-    echo "Continuing to tests..."
-fi
-
-# Step 2: Run tests after code review
+# Step 1: Run tests after code review
 echo ""
 echo "🧪 Running API e2e tests..."
 echo ""

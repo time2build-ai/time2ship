@@ -27,6 +27,7 @@ A production-ready full-stack monorepo boilerplate featuring Next.js, Express, P
 <td width="50%">
 
 ### 🎯 Core Features
+
 - 📦 **Monorepo Architecture** - Workspace-based structure with shared tooling
 - 🔷 **Full-Stack TypeScript** - Type safety across client and server
 - ⚡ **Modern Frontend** - Next.js 16 with React 19, Tailwind CSS 4
@@ -38,6 +39,7 @@ A production-ready full-stack monorepo boilerplate featuring Next.js, Express, P
 <td width="50%">
 
 ### 🛠️ Developer Experience
+
 - 🐳 **Docker Ready** - Full containerization with Docker Compose
 - 🧪 **Comprehensive Testing** - Jest, Supertest, E2E in Docker
 - 📧 **Email Service** - Nodemailer with template support
@@ -142,6 +144,7 @@ Get up and running in 3 steps:
 <td>
 
 **1️⃣ Clone & Install**
+
 ```bash
 git clone <repository-url>
 cd time2ship
@@ -154,6 +157,7 @@ npm install
 <td>
 
 **2️⃣ Configure Environment**
+
 ```bash
 # API
 cd apps/api
@@ -163,6 +167,7 @@ cp .env.example .env
 cd ../client
 cp .env.example .env
 ```
+
 > 💡 Edit the `.env` files with your configuration
 
 </td>
@@ -171,12 +176,14 @@ cp .env.example .env
 <td>
 
 **3️⃣ Launch with Docker** 🐳
+
 ```bash
 # From project root
 docker-compose up
 ```
 
 **🎉 Done!** Visit:
+
 - 🎨 **Frontend**: [http://localhost:3000](http://localhost:3000)
 - ⚙️ **API**: [http://localhost:3001](http://localhost:3001)
 - 🗄️ **Database**: `localhost:5432`
@@ -197,11 +204,13 @@ docker-compose up
 ```
 
 **Services will be available at:**
+
 - 🎨 **Client**: http://localhost:3000
 - ⚙️ **API**: http://localhost:3001
 - 🗄️ **PostgreSQL**: localhost:5432
 
 **Useful Docker commands:**
+
 ```bash
 # Start in detached mode
 docker-compose up -d
@@ -224,17 +233,20 @@ docker-compose up --build
 Run services individually for more control:
 
 **Step 1: Start PostgreSQL**
+
 ```bash
 docker-compose up db
 ```
 
 **Step 2: Run API** (in new terminal)
+
 ```bash
 cd apps/api
 npm run dev
 ```
 
 **Step 3: Run Client** (in new terminal)
+
 ```bash
 cd apps/client
 npm run dev
@@ -269,9 +281,9 @@ npm run db:studio
 
 After running `npm run db:seed`, the following test users will be available:
 
-| Email | Password | Role |
-|-------|----------|------|
-| `test@time2ship.ai` | `Test1234!` | Test User |
+| Email                | Password     | Role       |
+| -------------------- | ------------ | ---------- |
+| `test@time2ship.ai`  | `Test1234!`  | Test User  |
 | `admin@time2ship.ai` | `Admin1234!` | Admin User |
 
 > 🔒 **Security Note**: Change these credentials in production!
@@ -283,22 +295,22 @@ After running `npm run db:seed`, the following test users will be available:
 <details>
 <summary><b>🏠 Root Level Commands</b></summary>
 
-| Command | Description |
-|---------|-------------|
-| `npm run prepare` | 🔧 Install Husky hooks |
-| `npm run review` | 👀 Review changes before commit |
+| Command           | Description                     |
+| ----------------- | ------------------------------- |
+| `npm run prepare` | 🔧 Install Husky hooks          |
+| `npm run review`  | 👀 Review changes before commit |
 
 </details>
 
 <details>
 <summary><b>🎨 Client App (apps/client)</b></summary>
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | 🚀 Start development server |
-| `npm run build` | 📦 Build for production |
-| `npm start` | ▶️ Start production server |
-| `npm run lint` | 🔍 Run ESLint |
+| Command         | Description                 |
+| --------------- | --------------------------- |
+| `npm run dev`   | 🚀 Start development server |
+| `npm run build` | 📦 Build for production     |
+| `npm start`     | ▶️ Start production server  |
+| `npm run lint`  | 🔍 Run ESLint               |
 
 </details>
 
@@ -387,6 +399,7 @@ Complete authentication system out of the box:
 <td width="50%">
 
 ### Features
+
 - ✅ **Registration** - Email/password with validation
 - ✅ **Login** - JWT access + refresh tokens
 - ✅ **Token Refresh** - Automatic renewal
@@ -398,13 +411,14 @@ Complete authentication system out of the box:
 <td width="50%">
 
 ### API Endpoints
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/register` | POST | 📝 User registration |
-| `/api/auth/login` | POST | 🔑 User login |
-| `/api/auth/refresh` | POST | 🔄 Refresh tokens |
-| `/api/auth/logout` | POST | 👋 User logout |
-| `/api/auth/me` | GET | 👤 Get current user |
+
+| Endpoint             | Method | Description          |
+| -------------------- | ------ | -------------------- |
+| `/api/auth/register` | POST   | 📝 User registration |
+| `/api/auth/login`    | POST   | 🔑 User login        |
+| `/api/auth/refresh`  | POST   | 🔄 Refresh tokens    |
+| `/api/auth/logout`   | POST   | 👋 User logout       |
+| `/api/auth/me`       | GET    | 👤 Get current user  |
 
 </td>
 </tr>
@@ -488,6 +502,7 @@ src/
 ```
 
 **Key Principles:**
+
 - ✅ Features are self-contained modules
 - ✅ Shared code lives in `common/`
 - ✅ Clear separation of concerns
@@ -523,6 +538,7 @@ src/
 ```
 
 **Key Principles:**
+
 - ✅ Server-first with RSC (React Server Components)
 - ✅ Route groups for layout organization
 - ✅ Shared components for consistency
@@ -538,14 +554,17 @@ src/
 The project uses **Husky** for automated code quality checks:
 
 ### Pre-commit Hooks
+
 - 🔍 **Linting** - ESLint on staged files
 - ✅ **Type Checking** - TypeScript compilation check
 - 📝 **Formatting** - Ensure code style consistency
 
 ### Pre-push Hooks
+
 - 🧪 **Tests** - Run test suite before pushing
 
 **Manual Review:**
+
 ```bash
 npm run review  # Review all changes before commit
 ```
@@ -612,9 +631,9 @@ This project is licensed under the **ISC License**.
 
 Need help? We're here for you!
 
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/your-repo/issues)
-- 💡 **Feature Requests**: [Start a discussion](https://github.com/your-repo/discussions)
-- 📧 **Contact**: your-email@example.com
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/time2build-ai/time2ship/issues)
+- 💡 **Feature Requests**: [Start a discussion](https://github.com/time2build-ai/time2ship/discussions)
+- 📧 **Contact**: thiago@time2build.ai
 
 ---
 
