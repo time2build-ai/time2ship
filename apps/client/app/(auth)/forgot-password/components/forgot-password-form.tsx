@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { GlassContainer } from '@/shared/components/ui/glass-container';
 import { forgotPasswordAction } from '../actions';
 
 function SubmitButton(): React.ReactElement {
@@ -34,39 +35,43 @@ export function ForgotPasswordForm(): React.ReactElement {
   }, [state, router]);
 
   return (
-    <div className="w-full max-w-lg space-y-8 animate-fade-up">
-      <div className="text-center space-y-3">
-        <h1 className="text-4xl font-bold tracking-tighter leading-none">
-          Reset your password
-        </h1>
-        <p className="text-lg text-surface-dim leading-relaxed">
-          Enter your email and we'll send you a code
-        </p>
-      </div>
+    <div className="w-full max-w-lg animate-fade-up">
+      <GlassContainer>
+        <div className="space-y-8">
+          <div className="text-center space-y-3">
+            <h1 className="text-4xl font-bold tracking-tighter leading-none">
+              Reset your password
+            </h1>
+            <p className="text-lg text-surface-dim leading-relaxed">
+              Enter your email and we'll send you a code
+            </p>
+          </div>
 
-      <form action={formAction} className="space-y-6">
-        <Input
-          name="email"
-          type="email"
-          label="Email"
-          placeholder="you@example.com"
-          autoComplete="email"
-          required
-          error={state?.errors?.email?.[0]}
-        />
+          <form action={formAction} className="space-y-6">
+            <Input
+              name="email"
+              type="email"
+              label="Email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+              error={state?.errors?.email?.[0]}
+            />
 
-        <SubmitButton />
-      </form>
+            <SubmitButton />
+          </form>
 
-      <p className="text-center text-sm text-surface-dim tracking-wide">
-        Remember your password?{' '}
-        <Link
-          href="/login"
-          className="font-medium text-accent-primary hover:text-accent-primary-soft transition-colors duration-150 ease-out"
-        >
-          Sign in
-        </Link>
-      </p>
+          <p className="text-center text-sm text-surface-dim tracking-wide">
+            Remember your password?{' '}
+            <Link
+              href="/login"
+              className="font-medium text-accent-primary hover:text-accent-primary-soft transition-colors duration-150 ease-out"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </GlassContainer>
     </div>
   );
 }

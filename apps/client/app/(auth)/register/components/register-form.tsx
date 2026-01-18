@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import { GlassContainer } from '@/shared/components/ui/glass-container';
 
 import { registerAction } from '../actions';
 
@@ -28,52 +29,58 @@ export function RegisterForm(): React.ReactElement {
   }, [state?.error]);
 
   return (
-    <div className="w-full max-w-md space-y-8">
-      <div className="text-center space-y-3">
-        <h1 className="text-4xl font-bold tracking-tighter">Create an account</h1>
-        <p className="text-base text-surface-dim">
-          Get started with Time2Ship
-        </p>
-      </div>
+    <div className="w-full max-w-lg animate-fade-up">
+      <GlassContainer>
+        <div className="space-y-8">
+          <div className="text-center space-y-3">
+            <h1 className="text-4xl font-bold tracking-tighter leading-none">
+              Create an account
+            </h1>
+            <p className="text-lg text-surface-dim leading-relaxed">
+              Get started with Time2Ship
+            </p>
+          </div>
 
-      <form action={formAction} className="space-y-6">
-        <Input
-          name="email"
-          type="email"
-          label="Email"
-          placeholder="you@example.com"
-          autoComplete="email"
-          required
-          error={state?.errors?.email?.[0]}
-        />
+          <form action={formAction} className="space-y-6">
+            <Input
+              name="email"
+              type="email"
+              label="Email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              required
+              error={state?.errors?.email?.[0]}
+            />
 
-        <div className="space-y-2">
-          <Input
-            name="password"
-            type="password"
-            label="Password"
-            placeholder="••••••••"
-            autoComplete="new-password"
-            required
-            error={state?.errors?.password?.[0]}
-          />
-          <p className="text-xs text-surface-dim tracking-wide">
-            Must be at least 8 characters with uppercase, lowercase, number, and special character
+            <div className="space-y-2">
+              <Input
+                name="password"
+                type="password"
+                label="Password"
+                placeholder="••••••••"
+                autoComplete="new-password"
+                required
+                error={state?.errors?.password?.[0]}
+              />
+              <p className="text-xs text-surface-dim tracking-wide leading-relaxed">
+                Must be at least 8 characters with uppercase, lowercase, number, and special character
+              </p>
+            </div>
+
+            <SubmitButton />
+          </form>
+
+          <p className="text-center text-sm text-surface-dim tracking-wide">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="font-medium text-accent-primary hover:text-accent-primary-soft transition-colors duration-150 ease-out"
+            >
+              Sign in
+            </Link>
           </p>
         </div>
-
-        <SubmitButton />
-      </form>
-
-      <p className="text-center text-sm text-surface-dim">
-        Already have an account?{' '}
-        <Link
-          href="/login"
-          className="font-medium text-accent-primary hover:text-accent-primary-soft transition-colors duration-150 ease-out"
-        >
-          Sign in
-        </Link>
-      </p>
+      </GlassContainer>
     </div>
   );
 }

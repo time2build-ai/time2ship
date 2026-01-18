@@ -1,22 +1,32 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { and, eq, gt, lt, or, sql } from 'drizzle-orm';
+
 import { db } from '@/config/database';
-import { passwordResets } from '../schemas/password-reset.schema';
-import { userService } from '@/features/users/services/user.service';
+import { env } from '@/config/env';
 import { emailService } from '@/common/services/email.service';
-import { eq, and, gt, sql } from 'drizzle-orm';
+import { userService } from '@/features/users/services/user.service';
+
 import {
-  PasswordResetRateLimitError,
   InvalidOtpError,
   InvalidResetTokenError,
+  PasswordResetRateLimitError,
 } from '../errors/password-reset.errors';
+import { passwordResets } from '../schemas/password-reset.schema';
 
 const SALT_ROUNDS = 10;
 const OTP_EXPIRATION_MINUTES = 15;
 const RESET_TOKEN_EXPIRATION_MINUTES = 10;
 const RATE_LIMIT_REQUESTS = 3;
 const RATE_LIMIT_WINDOW_HOURS = 1;
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
+
+function logDev(message: string): void {
+  if (IS_DEVELOPMENT) {
+    console.log(`[DEV] ${message}`);
+  }
+}
 
 /**
  * Service handling password reset operations.
@@ -38,7 +48,7 @@ export class PasswordResetService {
   private generateResetToken(email: string): string {
     return jwt.sign(
       { email, type: 'password-reset' },
-      process.env.JWT_SECRET!,
+      env.JWT_ACCESS_SECRET,
       { expiresIn: `${RESET_TOKEN_EXPIRATION_MINUTES}m` }
     );
   }
@@ -75,7 +85,10 @@ export class PasswordResetService {
       .where(
         and(
           eq(passwordResets.email, email),
-          sql`(${passwordResets.expiresAt} < NOW() OR ${passwordResets.used} = true)`
+          or(
+            lt(passwordResets.expiresAt, sql`NOW()`),
+            eq(passwordResets.used, true)
+          )
         )
       );
   }
@@ -85,16 +98,19 @@ export class PasswordResetService {
    * @param email - User's email address
    */
   async requestPasswordReset(email: string): Promise<void> {
+    // Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Check rate limiting
-    await this.checkRateLimit(email);
+    await this.checkRateLimit(normalizedEmail);
 
     // Cleanup old records
-    await this.cleanupOldRecords(email);
+    await this.cleanupOldRecords(normalizedEmail);
 
     // Check if user exists (catch error to prevent enumeration)
     let userExists = true;
     try {
-      await userService.findByEmail(email);
+      await userService.findByEmail(normalizedEmail);
     } catch (error) {
       userExists = false;
     }
@@ -107,21 +123,18 @@ export class PasswordResetService {
 
       // Store hashed OTP in database
       await db.insert(passwordResets).values({
-        email,
+        email: normalizedEmail,
         otp: hashedOtp,
         expiresAt,
       });
 
       // Send email with plain OTP (passed as resetToken to reuse template)
-      await emailService.sendPasswordResetEmail(email, {
-        email,
+      await emailService.sendPasswordResetEmail(normalizedEmail, {
+        email: normalizedEmail,
         resetToken: otp, // OTP code sent in email
       });
 
-      // Log OTP for development (remove in production)
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEV] Password reset OTP for ${email}: ${otp}`);
-      }
+      logDev(`Password reset OTP for ${normalizedEmail}: ${otp}`);
     }
 
     // Always return success to prevent email enumeration
@@ -134,38 +147,43 @@ export class PasswordResetService {
    * @returns Reset token (JWT)
    */
   async verifyOTP(email: string, otp: string): Promise<string> {
-    // Look up non-expired, unused OTP record
+    // Trim and normalize OTP input
+    const normalizedOtp = otp.trim();
+
+    // Look up non-expired OTP record that hasn't been verified yet (resetToken is NULL)
     const records = await db
       .select()
       .from(passwordResets)
       .where(
         and(
-          eq(passwordResets.email, email),
+          eq(passwordResets.email, email.trim().toLowerCase()),
           gt(passwordResets.expiresAt, sql`NOW()`),
-          eq(passwordResets.used, false)
+          sql`${passwordResets.resetToken} IS NULL`
         )
-      );
+      )
+      .orderBy(sql`${passwordResets.createdAt} DESC`);
 
     if (records.length === 0) {
+      logDev(`No valid OTP record found for ${email}`);
       throw new InvalidOtpError();
     }
 
     const record = records[0];
+    logDev(`Verifying OTP for ${email}, input length: ${normalizedOtp.length}`);
 
-    // Verify OTP
-    const isValid = await bcrypt.compare(otp, record.otp);
+    const isValid = await bcrypt.compare(normalizedOtp, record.otp);
     if (!isValid) {
+      logDev(`OTP comparison failed for ${email}`);
       throw new InvalidOtpError();
     }
 
     // Generate reset token
     const resetToken = this.generateResetToken(email);
 
-    // Mark OTP as used and store reset token
+    // Store reset token (marks OTP as verified, but not yet used for password reset)
     await db
       .update(passwordResets)
       .set({
-        used: true,
         resetToken,
       })
       .where(eq(passwordResets.id, record.id));
@@ -182,12 +200,12 @@ export class PasswordResetService {
     // Verify JWT
     let payload: { email: string; type: string };
     try {
-      payload = jwt.verify(resetToken, process.env.JWT_SECRET!) as { email: string; type: string };
+      payload = jwt.verify(resetToken, env.JWT_ACCESS_SECRET) as { email: string; type: string };
     } catch (error) {
       throw new InvalidResetTokenError();
     }
 
-    // Look up reset record by token
+    // Look up reset record by token that hasn't been used yet
     const records = await db
       .select()
       .from(passwordResets)

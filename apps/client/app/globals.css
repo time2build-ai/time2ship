@@ -69,6 +69,68 @@ body {
   @apply bg-ink text-surface font-sans antialiased;
 }
 
+/* Scroll animations */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-up-delay-1 {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.animate-fade-up-delay-3 {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.animate-fade-up-delay-4 {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Prevent browser autocomplete from changing input background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--color-ink) inset !important;
+  -webkit-text-fill-color: var(--color-surface) !important;
+  caret-color: var(--color-surface) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Firefox autocomplete styling */
+input:-moz-autofill,
+input:-moz-autofill-preview {
+  filter: none !important;
+  background-color: var(--color-ink) !important;
+  color: var(--color-surface) !important;
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

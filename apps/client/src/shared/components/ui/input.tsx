@@ -1,5 +1,6 @@
-import { cn } from '@/shared/lib/utils';
 import { InputHTMLAttributes, forwardRef } from 'react';
+
+import { cn } from '@/shared/lib/utils';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -32,6 +33,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             'focus:ring-2 focus:ring-accent-glow',
             'transition-all duration-150 ease-out',
             'outline-none',
+            '[color-scheme:dark]',
             error && 'border-accent-error focus:border-accent-error focus:ring-accent-error/15',
             className
           )}

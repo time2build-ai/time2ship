@@ -74,15 +74,73 @@ Uses a **1.25 (Major Third)** ratio for harmonious hierarchy.
 // Hero headline
 <h1 className="text-5xl font-bold tracking-tighter">
 
+// Hero headline with responsive sizing
+<h1 className="text-5xl md:text-[3.815rem] font-bold leading-none tracking-tighter">
+
+// Gradient text effect for emphasis
+<span className="bg-gradient-to-br from-accent-primary to-accent-primary-soft bg-clip-text text-transparent">
+  Ship faster.
+</span>
+
 // Section title
 <h2 className="text-2xl font-semibold tracking-tight">
 
 // Body text
 <p className="text-base text-surface-dim">
 
+// Hero subtitle/description
+<p className="text-xl text-surface-dim max-w-[600px] leading-relaxed">
+
 // Overline/label
 <span className="text-xs font-medium tracking-widest uppercase text-accent-primary-soft">
 
 // Code/mono text
 <code className="font-mono text-sm">
+```
+
+## Advanced Typography Techniques
+
+### Gradient Text
+
+Use gradient text to emphasize key words or phrases in headlines:
+
+```jsx
+<h1 className="text-5xl font-bold tracking-tighter">
+  Build fast.<br />
+  <span className="bg-gradient-to-br from-accent-primary to-accent-primary-soft bg-clip-text text-transparent">
+    Ship faster.
+  </span>
+</h1>
+```
+
+**Guidelines:**
+- Use sparingly - only for hero headlines or key emphasis
+- Gradient direction: `bg-gradient-to-br` (bottom-right) or `bg-gradient-to-r` (right)
+- Color combination: `from-accent-primary to-accent-primary-soft`
+- Always pair with `bg-clip-text text-transparent`
+
+### Responsive Typography
+
+For hero sections, use responsive font sizes:
+
+```jsx
+// Mobile: text-5xl (3.815rem), Desktop: exact 5xl value
+<h1 className="text-5xl md:text-[3.815rem] font-bold leading-none tracking-tighter">
+
+// Mobile: text-xl, Desktop: text-2xl
+<p className="text-xl md:text-2xl text-surface-dim">
+```
+
+### Line Height Control
+
+- Headlines: Use `leading-none` for tight, impactful spacing
+- Body text: Use `leading-relaxed` for improved readability
+- Captions: Use `leading-normal` or default
+
+```jsx
+// Tight headline
+<h1 className="text-5xl font-bold leading-none tracking-tighter">
+
+// Relaxed body text
+<p className="text-xl leading-relaxed text-surface-dim">
 ```

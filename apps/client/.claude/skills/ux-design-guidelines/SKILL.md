@@ -41,6 +41,8 @@ The design system is organized into separate rule files:
    - Font families (Outfit, JetBrains Mono)
    - Type scale (5xl to xs)
    - Letter spacing rules
+   - Gradient text effects
+   - Responsive typography
    - Common typography patterns
 
 2. **Colors** ([colors.md](./rules/colors.md))
@@ -64,17 +66,27 @@ The design system is organized into separate rule files:
 6. **Animations** ([animations.md](./rules/animations.md))
    - Easing functions (ease-out, ease-spring, etc.)
    - Duration scale
+   - Staggered animations
    - Microanimation patterns
    - Animation code examples
 
 7. **Components** ([components.md](./rules/components.md))
-   - Button variants (primary, secondary, ghost)
+   - Button variants (primary, outline, pill styles)
    - Input fields
-   - Badges
+   - Badges and pills
    - Cards
+   - Hero sections
+   - Responsive button groups
    - Component-specific rules
 
-8. **Tailwind Configuration** ([tailwind-config.md](./rules/tailwind-config.md))
+8. **Background Effects** ([background-effects.md](./rules/background-effects.md))
+   - Grid backgrounds
+   - Gradient glows
+   - Decorative elements (terminal windows)
+   - Layering and z-index strategy
+   - Complete examples
+
+9. **Tailwind Configuration** ([tailwind-config.md](./rules/tailwind-config.md))
    - Tailwind CSS v4 configuration
    - Global CSS setup with @theme directive
    - CSS variable definitions
@@ -103,6 +115,8 @@ If you see errors like colors not working or classes not applying:
    - For buttons: Read [components.md](./rules/components.md), [colors.md](./rules/colors.md), [animations.md](./rules/animations.md)
    - For forms: Read [components.md](./rules/components.md), [typography.md](./rules/typography.md), [spacing.md](./rules/spacing.md)
    - For cards: Read [components.md](./rules/components.md), [shadows.md](./rules/shadows.md), [animations.md](./rules/animations.md)
+   - For hero sections: Read [components.md](./rules/components.md), [typography.md](./rules/typography.md), [background-effects.md](./rules/background-effects.md), [animations.md](./rules/animations.md)
+   - For landing pages: Read [background-effects.md](./rules/background-effects.md), [components.md](./rules/components.md), [animations.md](./rules/animations.md)
    - For any text styling: Read [typography.md](./rules/typography.md)
 
 2. **Apply the design system patterns** from the rules
@@ -163,20 +177,33 @@ When creating or updating a component, verify:
 - [ ] Colors are from the design system palette (ink/surface/accent)
 - [ ] Typography uses correct font family (Outfit or JetBrains Mono)
 - [ ] Spacing follows the 4px base unit system
-- [ ] Border radius matches component type (buttons: md, cards: xl, etc.)
-- [ ] Shadows are used appropriately (cards: md, modals: lg)
+- [ ] Border radius matches component type (hero buttons: full, standard buttons: md, cards: xl)
+- [ ] Shadows are used appropriately (cards: md, modals: lg, primary buttons: glow)
 - [ ] Transitions use correct duration (150-250ms for most interactions)
 - [ ] Easing functions are appropriate (ease-out for most UI transitions)
 - [ ] Hover states are defined for interactive elements
 - [ ] Focus states include ring and border color changes
-- [ ] Active states include scale or other tactile feedback
+- [ ] Active states include scale or other tactile feedback (active:scale-[0.98])
 - [ ] Component structure matches patterns in [components.md](./rules/components.md)
+- [ ] Staggered animations use incremental delays (0.1s, 0.2s, 0.3s)
+- [ ] Background effects include pointer-events-none
+- [ ] Z-index layering is correct (backgrounds: z-0, content: z-[1])
+- [ ] Responsive classes are applied where needed (flex-col sm:flex-row)
+- [ ] Gradient text uses proper classes (bg-gradient-to-br from-accent-primary to-accent-primary-soft bg-clip-text text-transparent)
 
 ## Common Patterns Quick Reference
 
 ```jsx
-// Hero headline
-<h1 className="text-5xl font-bold tracking-tighter">
+// Hero headline with gradient text
+<h1 className="text-5xl md:text-[3.815rem] font-bold leading-none tracking-tighter">
+  Build fast.<br />
+  <span className="bg-gradient-to-br from-accent-primary to-accent-primary-soft bg-clip-text text-transparent">
+    Ship faster.
+  </span>
+</h1>
+
+// Hero subtitle
+<p className="text-xl text-surface-dim max-w-[600px] leading-relaxed">
 
 // Section title
 <h2 className="text-2xl font-semibold tracking-tight">
@@ -184,7 +211,16 @@ When creating or updating a component, verify:
 // Body text
 <p className="text-base text-surface-dim">
 
-// Primary button
+// Feature badge with icon
+<div className="inline-flex items-center gap-2 px-4 py-2 bg-ink-muted border border-ink-subtle rounded-full text-xs tracking-wide text-surface-dim">
+  <svg className="w-4 h-4 text-accent-primary">...</svg>
+  AI Friendly
+</div>
+
+// Hero CTA button (pill style)
+<button className="px-8 py-4 bg-accent-primary hover:bg-accent-primary-soft text-white text-base rounded-full transition-all duration-150 ease-out hover:shadow-glow active:scale-[0.98]">
+
+// Primary button (standard)
 <button className="bg-accent-primary hover:bg-accent-primary-soft text-white px-6 py-3 rounded-md transition-all duration-150 ease-out hover:shadow-glow active:scale-[0.98]">
 
 // Card
@@ -192,11 +228,89 @@ When creating or updating a component, verify:
 
 // Input
 <input className="bg-ink border border-ink-subtle rounded-md px-4 py-3 focus:border-accent-primary focus:ring-2 focus:ring-accent-glow transition-all duration-150 ease-out outline-none">
+
+// Staggered animations
+<div className="animate-fade-up">First</div>
+<div className="animate-fade-up-delay-1">Second</div>
+<div className="animate-fade-up-delay-2">Third</div>
+
+// Responsive button group
+<div className="flex gap-4 flex-col sm:flex-row">
+  <button>Primary</button>
+  <button>Secondary</button>
+</div>
 ```
 
 ## Examples
 
-### Example 1: Creating a Primary Button
+### Example 1: Creating a Hero Section
+
+**Task:** "Create a hero section for a landing page"
+
+**Workflow:**
+1. Read [components.md](./rules/components.md) for hero section structure
+2. Read [typography.md](./rules/typography.md) for headline and gradient text patterns
+3. Read [background-effects.md](./rules/background-effects.md) for grid and glow effects
+4. Read [animations.md](./rules/animations.md) for staggered animations
+5. Apply the patterns:
+
+```jsx
+export default function HeroSection() {
+  return (
+    <section className="relative z-[1] h-screen overflow-hidden flex flex-col justify-center items-center text-center px-8">
+      {/* Grid background */}
+      <div
+        className="absolute inset-0 opacity-40 pointer-events-none z-0"
+        style={{
+          backgroundImage: "linear-gradient(var(--color-ink-subtle) 1px, transparent 1px), linear-gradient(90deg, var(--color-ink-subtle) 1px, transparent 1px)",
+          backgroundSize: "60px 60px"
+        }}
+      />
+
+      {/* Gradient glow */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          background: "radial-gradient(ellipse 80% 50% at 50% -20%, var(--color-accent-glow), transparent)"
+        }}
+      />
+
+      {/* Feature badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-ink-muted border border-ink-subtle rounded-full text-xs tracking-wide text-surface-dim mb-8 animate-fade-up">
+        <svg className="w-4 h-4 text-accent-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {/* icon */}
+        </svg>
+        AI Friendly
+      </div>
+
+      {/* Headline with gradient */}
+      <h1 className="text-5xl md:text-[3.815rem] font-bold leading-none tracking-tighter mb-6 animate-fade-up-delay-1">
+        Build fast.<br />
+        <span className="bg-gradient-to-br from-accent-primary to-accent-primary-soft bg-clip-text text-transparent">
+          Ship faster.
+        </span>
+      </h1>
+
+      {/* Subtitle */}
+      <p className="text-xl text-surface-dim max-w-[600px] mb-12 leading-relaxed animate-fade-up-delay-2">
+        A production-ready full-stack monorepo boilerplate.
+      </p>
+
+      {/* CTA buttons */}
+      <div className="flex gap-4 animate-fade-up-delay-3 flex-col sm:flex-row">
+        <button className="px-8 py-4 bg-accent-primary hover:bg-accent-primary-soft text-white text-base rounded-full transition-all duration-150 ease-out hover:shadow-glow active:scale-[0.98]">
+          Start shipping
+        </button>
+        <button className="px-8 py-4 bg-transparent hover:bg-ink-subtle text-surface border border-ink-subtle hover:border-surface-dim text-base rounded-full transition-all duration-150 ease-out">
+          See repository
+        </button>
+      </div>
+    </section>
+  );
+}
+```
+
+### Example 2: Creating a Primary Button
 
 **Task:** "Add a submit button to the form"
 

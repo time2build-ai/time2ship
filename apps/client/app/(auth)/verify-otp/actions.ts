@@ -7,6 +7,10 @@ const verifyOtpSchema = z.object({
   otp: z.string().length(6).regex(/^\d{6}$/),
 });
 
+const resendOtpSchema = z.object({
+  email: z.string().email(),
+});
+
 export async function verifyOtpAction(
   prevState: unknown,
   formData: FormData
@@ -37,6 +41,35 @@ export async function verifyOtpAction(
     }
 
     return { resetToken: data.data.resetToken };
+  } catch (error) {
+    return { error: 'Network error. Please try again.' };
+  }
+}
+
+export async function resendOtpAction(
+  email: string
+): Promise<{ error?: string; success?: boolean }> {
+  const result = resendOtpSchema.safeParse({ email });
+
+  if (!result.success) {
+    return { error: 'Invalid email address' };
+  }
+
+  try {
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/v1/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: result.data.email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { error: data.message || 'Failed to resend code' };
+    }
+
+    return { success: true };
   } catch (error) {
     return { error: 'Network error. Please try again.' };
   }
