@@ -3,8 +3,6 @@
 # Security Checks Script
 # Runs vulnerability scanning and dependency health checks
 
-set -e
-
 echo "🔒 Running security checks..."
 echo ""
 
@@ -22,26 +20,26 @@ echo ""
 cd "$PROJECT_ROOT"
 
 # Run Snyk test - will exit with code 1 if vulnerabilities found
-if npx snyk test --severity-threshold=high 2>&1; then
+npx snyk test --severity-threshold=high 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -eq 0 ]; then
     echo ""
     echo "✅ No high/critical vulnerabilities found"
+elif [ $EXIT_CODE -eq 1 ]; then
+    HAS_VULNERABILITIES=1
+    echo ""
+    echo "⚠️  High or critical severity vulnerabilities detected!"
+elif [ $EXIT_CODE -eq 2 ]; then
+    echo ""
+    echo "⚠️  Snyk encountered an error. Please check your configuration."
+    echo "Run 'npx snyk auth' to authenticate if needed."
+    echo ""
+    echo "Skipping Snyk check for now..."
 else
-    EXIT_CODE=$?
-    if [ $EXIT_CODE -eq 1 ]; then
-        HAS_VULNERABILITIES=1
-        echo ""
-        echo "⚠️  High or critical severity vulnerabilities detected!"
-    elif [ $EXIT_CODE -eq 2 ]; then
-        echo ""
-        echo "⚠️  Snyk encountered an error. Please check your configuration."
-        echo "Run 'npx snyk auth' to authenticate if needed."
-        echo ""
-        echo "Skipping Snyk check for now..."
-    else
-        HAS_VULNERABILITIES=1
-        echo ""
-        echo "⚠️  Snyk check failed with exit code $EXIT_CODE"
-    fi
+    HAS_VULNERABILITIES=1
+    echo ""
+    echo "⚠️  Snyk check failed with exit code $EXIT_CODE"
 fi
 
 echo ""
@@ -59,23 +57,42 @@ check_unused_deps() {
         echo "Checking $APP_NAME..."
         cd "$PROJECT_ROOT/$APP_PATH"
 
-        DEPCHECK_OUTPUT=$(npx depcheck --json)
+        # Run depcheck and capture output
+        DEPCHECK_OUTPUT=$(npx depcheck --json 2>&1)
 
-        # Parse depcheck output
-        UNUSED_COUNT=$(echo "$DEPCHECK_OUTPUT" | grep -o '"dependencies":\[' | wc -l || echo "0")
+        # Use node to parse JSON and check for unused deps
+        echo "$DEPCHECK_OUTPUT" | node -e "
+            let input = '';
+            process.stdin.on('data', chunk => input += chunk);
+            process.stdin.on('end', () => {
+                try {
+                    const data = JSON.parse(input);
+                    const deps = data.dependencies || [];
+                    const devDeps = data.devDependencies || [];
 
-        if echo "$DEPCHECK_OUTPUT" | grep -q '"dependencies":\[.\+\]'; then
-            HAS_UNUSED_DEPS=1
-            echo ""
-            echo "⚠️  Unused dependencies found in $APP_NAME:"
-            echo "$DEPCHECK_OUTPUT" | npx depcheck --json | node -e "
-                const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
-                if (data.dependencies && data.dependencies.length > 0) {
-                    console.log('  Unused:', data.dependencies.join(', '));
+                    if (deps.length > 0 || devDeps.length > 0) {
+                        if (deps.length > 0) {
+                            console.log('  Unused dependencies: ' + deps.join(', '));
+                        }
+                        if (devDeps.length > 0) {
+                            console.log('  Unused devDependencies: ' + devDeps.join(', '));
+                        }
+                        process.exit(1);
+                    } else {
+                        process.exit(0);
+                    }
+                } catch (e) {
+                    console.error('Error parsing depcheck output');
+                    process.exit(0);
                 }
-            " 2>/dev/null || echo "$DEPCHECK_OUTPUT"
+            });
+        "
+
+        if [ $? -ne 0 ]; then
+            HAS_UNUSED_DEPS=1
+            echo "⚠️  Unused dependencies detected"
         else
-            echo "✅ No unused dependencies in $APP_NAME"
+            echo "✅ No unused dependencies"
         fi
 
         cd "$PROJECT_ROOT"

@@ -1,0 +1,9 @@
+{
+  "ignores": [
+    "@types/node",
+    "@types/express",
+    "@types/cors",
+    "@types/cookie-parser"
+  ],
+  "skip-missing": true
+}

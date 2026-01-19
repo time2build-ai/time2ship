@@ -1,0 +1,10 @@
+{
+  "ignores": [
+    "@tailwindcss/postcss",
+    "tailwindcss",
+    "@types/node",
+    "@types/react",
+    "@types/react-dom"
+  ],
+  "skip-missing": true
+}
