@@ -23,7 +23,8 @@ TREE_LAST="└─"
 TREE_PIPE="│"
 
 # Logging variables
-LOG_DIR=".husky/logs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null || cd "$(dirname "$0")" && pwd)"
+LOG_DIR="$SCRIPT_DIR/../logs"
 LOG_FILE=""
 TEMP_OUTPUT=""
 STEP_START_TIME=""
