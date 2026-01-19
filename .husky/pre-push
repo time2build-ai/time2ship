@@ -4,6 +4,9 @@
 . "$(dirname "$0")/scripts/ui-utils.sh"
 export HUSKY_UI_LOADED=1
 
+# Save project root directory
+PROJECT_ROOT="$(pwd)"
+
 # Initialize logging
 HOOK_START_TIME=$(date +%s)
 init_logging "pre-push"
@@ -41,7 +44,7 @@ substep_start "Scanning for vulnerabilities with Snyk..."
 SNYK_OUTPUT=$(mktemp)
 
 # Run Snyk scan
-cd "$PWD"
+cd "$PROJECT_ROOT"
 if npx snyk test --severity-threshold=high > "$SNYK_OUTPUT" 2>&1; then
     SNYK_RESULT=0
     log "$(cat "$SNYK_OUTPUT")"
@@ -88,7 +91,7 @@ substep_start "Checking for unused dependencies..."
 echo "  ${TREE_PIPE}"
 substep_nested "Checking Client App..."
 
-cd "$PWD/apps/client"
+cd "$PROJECT_ROOT/apps/client"
 CLIENT_DEPS=$(npx depcheck --json 2>&1)
 CLIENT_HAS_UNUSED=$(echo "$CLIENT_DEPS" | node -e "
     let input = '';
@@ -116,7 +119,7 @@ else
 fi
 
 # Check API App
-cd "$PWD/../api"
+cd "$PROJECT_ROOT/apps/api"
 substep_nested "Checking API App..."
 
 API_DEPS=$(npx depcheck --json 2>&1)
@@ -145,7 +148,7 @@ else
     substep_nested "⚠️  Unused dependencies detected" 1
 fi
 
-cd "$PWD/../.."
+cd "$PROJECT_ROOT"
 
 # Fail if any unused deps found
 if [ "$CLIENT_HAS_UNUSED" = "1" ] || [ "$API_HAS_UNUSED" = "1" ]; then
