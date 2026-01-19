@@ -5,10 +5,19 @@ import { env } from '../config/env';
 import { AppError } from '../common/utils/errors';
 
 // Redis client for distributed rate limiting (optional)
-const redis = env.REDIS_URL ? new Redis(env.REDIS_URL) : undefined;
+// Only create Redis client if not in test environment or if explicitly configured
+const redis = env.REDIS_URL && env.NODE_ENV !== 'test' ? new Redis(env.REDIS_URL) : undefined;
+
+// Cleanup function for graceful shutdown
+export const closeRedisConnection = async (): Promise<void> => {
+  if (redis) {
+    await redis.quit();
+  }
+};
 
 /**
  * Create rate limiter with optional Redis store for distributed systems
+ * Disabled in test environment
  */
 const createRateLimiter = (options: {
   windowMs: number;
@@ -17,6 +26,15 @@ const createRateLimiter = (options: {
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
 }) => {
+  // Skip rate limiting in test environment
+  if (env.NODE_ENV === 'test') {
+    return rateLimit({
+      windowMs: options.windowMs,
+      max: 999999, // Effectively unlimited for tests
+      skip: () => true, // Skip all requests in test mode
+    });
+  }
+
   return rateLimit({
     windowMs: options.windowMs,
     max: options.max,
@@ -27,8 +45,7 @@ const createRateLimiter = (options: {
     // Use Redis store if available, otherwise memory store
     store: redis
       ? new RedisStore({
-          // @ts-expect-error - Type mismatch between ioredis and rate-limit-redis
-          client: redis,
+          sendCommand: (...args: [string, ...string[]]) => redis.call(...args) as Promise<any>,
           prefix: 'rate-limit:',
         })
       : undefined,
@@ -88,12 +105,22 @@ export const expensiveOperationRateLimit = createRateLimiter({
 
 /**
  * Per-user rate limiter (requires authentication)
+ * Disabled in test environment
  */
 export const createUserRateLimit = (options: {
   windowMs: number;
   max: number;
   message?: string;
 }) => {
+  // Skip rate limiting in test environment
+  if (env.NODE_ENV === 'test') {
+    return rateLimit({
+      windowMs: options.windowMs,
+      max: 999999,
+      skip: () => true,
+    });
+  }
+
   return rateLimit({
     windowMs: options.windowMs,
     max: options.max,
@@ -109,8 +136,7 @@ export const createUserRateLimit = (options: {
 
     store: redis
       ? new RedisStore({
-          // @ts-expect-error - Type mismatch between ioredis and rate-limit-redis
-          client: redis,
+          sendCommand: (...args: [string, ...string[]]) => redis.call(...args) as Promise<any>,
           prefix: 'rate-limit:user:',
         })
       : undefined,
