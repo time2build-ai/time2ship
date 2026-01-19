@@ -6,6 +6,9 @@ WORKDIR /app
 # Copy root package files (context is repo root)
 COPY package*.json ./
 
+# Copy workspace package.json files
+COPY apps/api/package*.json ./apps/api/
+
 # Install all workspace dependencies
 RUN npm ci
 
