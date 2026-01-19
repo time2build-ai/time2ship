@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { asyncHandler } from '@/middleware/asyncHandler';
 import { validate } from '@/middleware/validate';
+import { authRateLimit, passwordResetRateLimit } from '@/middleware/rateLimit';
+import { authSlowDown } from '@/middleware/slowDown';
 import { authController } from '../controllers/auth.controller';
 import { passwordResetController } from '../controllers/password-reset.controller';
 import { registerSchema, loginSchema, refreshTokenSchema } from '../validators/auth.validators';
@@ -40,6 +42,7 @@ const router = Router();
  */
 router.post(
   '/register',
+  authRateLimit,
   validate(registerSchema),
   asyncHandler(authController.register.bind(authController))
 );
@@ -72,6 +75,8 @@ router.post(
  */
 router.post(
   '/login',
+  authSlowDown,
+  authRateLimit,
   validate(loginSchema),
   asyncHandler(authController.login.bind(authController))
 );
@@ -146,16 +151,19 @@ router.post(
 // Password reset routes
 router.post(
   '/forgot-password',
+  passwordResetRateLimit,
   validate(forgotPasswordSchema),
   asyncHandler(passwordResetController.forgotPassword.bind(passwordResetController))
 );
 router.post(
   '/verify-reset-otp',
+  passwordResetRateLimit,
   validate(verifyResetOtpSchema),
   asyncHandler(passwordResetController.verifyOtp.bind(passwordResetController))
 );
 router.post(
   '/reset-password',
+  passwordResetRateLimit,
   validate(resetPasswordSchema),
   asyncHandler(passwordResetController.resetPassword.bind(passwordResetController))
 );

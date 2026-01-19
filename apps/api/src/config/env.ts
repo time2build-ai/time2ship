@@ -27,6 +27,13 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().email().default('noreply@time2ship.com'),
   EMAIL_FROM_NAME: z.string().default('Time2Ship'),
   CLIENT_URL: z.string().url().default('http://localhost:3000'),
+
+  // Redis configuration (optional - for distributed rate limiting)
+  REDIS_URL: z.string().url().optional(),
+
+  // Sentry configuration (optional - for error monitoring)
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_ENVIRONMENT: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

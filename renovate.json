@@ -1,0 +1,76 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":enablePreCommit",
+    "group:monorepos",
+    "group:recommended",
+    "workarounds:all"
+  ],
+  "timezone": "America/New_York",
+  "schedule": ["before 5am on monday"],
+  "labels": ["dependencies"],
+  "assignees": [],
+  "reviewers": [],
+  "packageRules": [
+    {
+      "description": "Automerge non-major updates",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash"
+    },
+    {
+      "description": "Group all non-major dependencies",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
+    {
+      "description": "Require manual approval for major updates",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Group ESLint packages",
+      "matchPackagePatterns": ["^eslint", "^@typescript-eslint/"],
+      "groupName": "ESLint packages"
+    },
+    {
+      "description": "Group Jest packages",
+      "matchPackagePatterns": ["^jest", "^@types/jest", "^ts-jest", "^@testing-library/"],
+      "groupName": "Jest and testing packages"
+    },
+    {
+      "description": "Group TypeScript packages",
+      "matchPackagePatterns": ["^typescript", "^@types/"],
+      "groupName": "TypeScript and type definitions"
+    },
+    {
+      "description": "Disable updates for Next.js (manage manually)",
+      "matchPackageNames": ["next"],
+      "enabled": false
+    },
+    {
+      "description": "Disable updates for React (manage manually)",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "enabled": false
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": []
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on the first day of the month"]
+  },
+  "npm": {
+    "minimumReleaseAge": "3 days"
+  },
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2
+}

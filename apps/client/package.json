@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.34.0",
     "clsx": "^2.1.1",
     "jose": "^6.1.3",
     "next": "16.1.3",

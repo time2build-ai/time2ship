@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/yourusername/time2ship/wiki
+    about: Check the documentation for common questions and guides
+  - name: Discussions
+    url: https://github.com/yourusername/time2ship/discussions
+    about: Ask questions and discuss ideas with the community
