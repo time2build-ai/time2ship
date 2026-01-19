@@ -83,7 +83,67 @@ Runs linting and type checking on staged files:
 
 **Script:** [pre-push](pre-push)
 
-Runs the full test suite before pushing to ensure all tests pass.
+Runs comprehensive checks before pushing to remote to ensure code quality, security, and functionality:
+
+### 1. Security Checks (Snyk + depcheck)
+**Script:** [scripts/security-checks.sh](scripts/security-checks.sh)
+
+Scans for vulnerabilities and dependency health issues:
+
+**Snyk Vulnerability Scanning:**
+- Checks for known security vulnerabilities in dependencies
+- Fails on **high** or **critical** severity issues
+- Uses Snyk's comprehensive vulnerability database
+
+**depcheck - Unused Dependencies:**
+- Identifies dependencies declared but never imported/used
+- Helps maintain clean `package.json` files
+- Reduces bundle size and attack surface
+
+**Installation required:**
+```bash
+# Snyk (included as dev dependency)
+npx snyk auth  # Authenticate once
+
+# depcheck (included as dev dependency)
+# No additional setup needed
+```
+
+**Running manually:**
+```bash
+# Run security checks
+./.husky/scripts/security-checks.sh
+
+# Just Snyk
+npx snyk test --severity-threshold=high
+
+# Just depcheck on client
+cd apps/client && npx depcheck
+
+# Just depcheck on API
+cd apps/api && npx depcheck
+```
+
+**Fixing vulnerabilities:**
+```bash
+# Interactive wizard to fix vulnerabilities
+npx snyk wizard
+
+# Or update packages manually
+npm update <package-name>
+npm install <package-name>@latest
+```
+
+**Handling false positives:**
+- For Snyk: Use `snyk ignore` or `.snyk` policy file
+- For depcheck: Dependencies used in config files may be flagged; verify before removing
+
+### 2. Build Validation
+- **Client App:** Full production build (`npm run build`)
+- **API App:** TypeScript compilation and build process
+
+### 3. E2E Tests
+- **API:** Runs end-to-end test suite to verify functionality
 
 ## Bypassing Hooks
 
@@ -104,6 +164,7 @@ git push --no-verify
 All hook scripts are located in the [scripts/](scripts/) directory:
 - [validate-branch-name.sh](scripts/validate-branch-name.sh) - Branch name validation
 - [detect-secrets.sh](scripts/detect-secrets.sh) - Secrets detection with Gitleaks
+- [security-checks.sh](scripts/security-checks.sh) - Vulnerability scanning and dependency health checks
 - [review-changes.sh](scripts/review-changes.sh) - Manual review helper (`npm run review`)
 
 ## Troubleshooting
@@ -114,6 +175,40 @@ Install Gitleaks following the instructions above, or skip the check temporarily
 git commit --no-verify
 ```
 
+### Snyk authentication required
+First time using Snyk? Authenticate once:
+```bash
+npx snyk auth
+```
+
+This opens a browser window to authenticate. The token is stored locally.
+
+### Security vulnerabilities found
+When Snyk detects high/critical vulnerabilities:
+1. **Review the vulnerability report** - Snyk shows which package and vulnerability
+2. **Try automatic fix:**
+   ```bash
+   npx snyk wizard
+   ```
+3. **Manual fix:**
+   - Update the vulnerable package: `npm update <package>`
+   - If no fix available, consider alternatives or assess risk
+4. **Accept risk temporarily:**
+   - Use Snyk's ignore feature for non-exploitable cases
+   - Document why in `.snyk` policy file
+
+### Unused dependencies detected
+When depcheck finds unused dependencies:
+1. **Verify they're truly unused** - Some may be used in config files
+2. **Remove if confirmed:**
+   ```bash
+   npm uninstall <package-name>
+   ```
+3. **Common false positives:**
+   - TypeScript type packages (`@types/*`) - May be used only in d.ts files
+   - Build tools used in config - Check webpack.config.js, next.config.js, etc.
+   - Peer dependencies - Required by other packages
+
 ### False positive in secrets detection
 1. Check if it's a real secret that should be in `.env` instead
 2. If it's truly a false positive, add to `.gitleaks.toml` allowlist
@@ -121,7 +216,7 @@ git commit --no-verify
 
 ### Hook fails unexpectedly
 1. Check the error message carefully
-2. Fix the underlying issue (linting, type errors, etc.)
+2. Fix the underlying issue (linting, type errors, vulnerabilities, etc.)
 3. Only use `--no-verify` as a last resort
 
 ## Learn More
