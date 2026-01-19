@@ -1,8 +1,113 @@
-# Validate branch name
-.husky/scripts/validate-branch-name.sh
+#!/bin/sh
 
-# Detect secrets
-.husky/scripts/detect-secrets.sh
+# Load UI utilities
+. "$(dirname "$0")/scripts/ui-utils.sh"
+export HUSKY_UI_LOADED=1
+
+# Initialize logging
+HOOK_START_TIME=$(date +%s)
+init_logging "pre-commit"
+
+# Print header
+print_header "Pre-Commit Checks" "🎯"
+
+TOTAL_STEPS=3
+CURRENT_STEP=0
+
+# ============================================================================
+# Step 1: Validate branch name
+# ============================================================================
+
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "Validating branch name" "🌿"
+
+STEP_TIME=$(date +%s)
+
+# Get branch name for display
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+substep_start "Checking branch '$BRANCH'..."
+
+# Run validation
+if capture_output ".husky/scripts/validate-branch-name.sh"; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 0 "Branch name is valid" "$DURATION" 1
+    step_end 0
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Invalid branch name" "$DURATION" 1
+    show_captured_output
+    step_end 1
+
+    echo ""
+    show_log_location
+    show_skip_hint
+
+    exit 1
+fi
+
+# ============================================================================
+# Step 2: Scan for secrets
+# ============================================================================
+
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "Scanning for secrets" "🔍"
+
+STEP_TIME=$(date +%s)
+
+substep_start "Running Gitleaks on staged files..."
+
+# Run secrets detection
+if capture_output ".husky/scripts/detect-secrets.sh"; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 0 "No secrets detected" "$DURATION" 1
+    step_end 0
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Secrets detected" "$DURATION" 1
+    show_captured_output
+    step_end 1
+
+    echo ""
+    show_log_location
+    show_skip_hint
+
+    exit 1
+fi
+
+# ============================================================================
+# Step 3: Run lint-staged
+# ============================================================================
+
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "Running lint-staged" "💅"
+
+STEP_TIME=$(date +%s)
+
+substep_start "Formatting and linting staged files..."
 
 # Run lint-staged
-npx lint-staged
+if capture_output "npx lint-staged"; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 0 "All checks passed" "$DURATION" 1
+    step_end 0
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Lint-staged failed" "$DURATION" 1
+    show_captured_output
+    step_end 1
+
+    echo ""
+    show_log_location
+    show_skip_hint
+
+    exit 1
+fi
+
+# ============================================================================
+# Success!
+# ============================================================================
+
+TOTAL_TIME=$(get_elapsed_time $HOOK_START_TIME)
+print_footer "success" "All Pre-Commit Checks Passed!" "$TOTAL_TIME"
+
+exit 0

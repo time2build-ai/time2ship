@@ -36,6 +36,10 @@ yarn-error.log*
 lerna-debug.log*
 pnpm-debug.log*
 
+# Husky hook logs
+.husky/logs/*.log
+!.husky/logs/.gitkeep
+
 # OS files
 .DS_Store
 .DS_Store?

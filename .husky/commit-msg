@@ -1,21 +1,64 @@
-# Validate commit message format (conventional commits)
+#!/bin/sh
+
+# Load UI utilities
+. "$(dirname "$0")/scripts/ui-utils.sh"
+export HUSKY_UI_LOADED=1
+
+# Initialize logging
+HOOK_START_TIME=$(date +%s)
+init_logging "commit-msg"
+
+# Print header
+print_header "Validating Commit Message" "📝"
+
+# Get commit message
 commit_msg=$(cat "$1")
+
+# Display the commit message
+echo "  ${BOLD}Message:${NC} \"${commit_msg}\""
+echo ""
+
+# Validate format
+STEP_TIME=$(date +%s)
+
+substep_start "Checking conventional commit format..."
 
 # Regex for conventional commit format: type(scope?): description
 conventional_commit_regex="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,}"
 
-if ! echo "$commit_msg" | grep -iqE "$conventional_commit_regex"; then
-    echo "❌ Invalid commit message format!"
+if echo "$commit_msg" | grep -iqE "$conventional_commit_regex"; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 0 "Valid conventional commit format" "$DURATION" 1
+
+    TOTAL_TIME=$(get_elapsed_time $HOOK_START_TIME)
+    print_footer "success" "Commit Message Validated!" "$TOTAL_TIME"
+
+    exit 0
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Invalid commit message format" "$DURATION" 1
+
     echo ""
-    echo "Commit message must follow conventional commits format:"
-    echo "  type(scope?): description"
+    echo "  ${TREE_LAST} ${RED}Error:${NC}"
+    echo "     ${GRAY}┌─────────────────────────────────────${NC}"
+    echo "     ${GRAY}│${NC} Commit message must follow conventional commits format:"
+    echo "     ${GRAY}│${NC}"
+    echo "     ${GRAY}│${NC} ${BOLD}Format:${NC} type(scope?): description"
+    echo "     ${GRAY}│${NC}"
+    echo "     ${GRAY}│${NC} ${BOLD}Types:${NC} feat, fix, docs, style, refactor,"
+    echo "     ${GRAY}│${NC}        perf, test, build, ci, chore, revert"
+    echo "     ${GRAY}│${NC}"
+    echo "     ${GRAY}│${NC} ${BOLD}Examples:${NC}"
+    echo "     ${GRAY}│${NC}   - feat: add user authentication"
+    echo "     ${GRAY}│${NC}   - fix(api): resolve database connection issue"
+    echo "     ${GRAY}│${NC}   - docs: update README with setup instructions"
+    echo "     ${GRAY}└─────────────────────────────────────${NC}"
+
     echo ""
-    echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
-    echo ""
-    echo "Examples:"
-    echo "  feat: add user authentication"
-    echo "  fix(api): resolve database connection issue"
-    echo "  docs: update README with setup instructions"
-    echo ""
+    show_log_location
+
+    TOTAL_TIME=$(get_elapsed_time $HOOK_START_TIME)
+    print_footer "error" "Commit Message Validation Failed!" "$TOTAL_TIME"
+
     exit 1
 fi

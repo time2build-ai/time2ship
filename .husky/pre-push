@@ -1,88 +1,288 @@
 #!/bin/sh
 
-echo "🚀 Pre-push checks starting..."
-echo ""
+# Load UI utilities
+. "$(dirname "$0")/scripts/ui-utils.sh"
+export HUSKY_UI_LOADED=1
+
+# Initialize logging
+HOOK_START_TIME=$(date +%s)
+init_logging "pre-push"
+
+# Print header
+print_header "Pre-Push Validation" "🚀"
 
 # Check if there are commits to push
 if git diff --quiet HEAD @{u} 2>/dev/null; then
-    echo "No new commits to push."
+    echo "  ${BLUE}ℹ️  No new commits to push.${NC}"
+    echo ""
     exit 0
 fi
 
-echo "📊 New commits detected!"
+# Count commits to push
+COMMIT_COUNT=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
+echo "  ${BLUE}📊 Detected ${COMMIT_COUNT} new commit(s) to push${NC}"
 echo ""
 
-# Step 1: Security checks (vulnerabilities & unused dependencies)
-echo ""
-echo "🔒 Running security checks..."
-echo ""
+TOTAL_STEPS=4
+CURRENT_STEP=0
 
-./.husky/scripts/security-checks.sh
+# ============================================================================
+# Step 1: Security checks (Snyk + Depcheck)
+# ============================================================================
 
-if [ $? -ne 0 ]; then
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "Security Checks" "🔒"
+
+STEP_TIME=$(date +%s)
+
+substep_start "Scanning for vulnerabilities with Snyk..."
+
+# Create a temp file for Snyk output
+SNYK_OUTPUT=$(mktemp)
+
+# Run Snyk scan
+cd "$PWD"
+if npx snyk test --severity-threshold=high > "$SNYK_OUTPUT" 2>&1; then
+    SNYK_RESULT=0
+    log "$(cat "$SNYK_OUTPUT")"
+else
+    SNYK_RESULT=$?
+    log "$(cat "$SNYK_OUTPUT")"
+fi
+
+if [ $SNYK_RESULT -eq 0 ]; then
+    substep_end 0 "No high/critical vulnerabilities found"
+elif [ $SNYK_RESULT -eq 2 ]; then
+    # Snyk auth error - skip gracefully
+    echo "  ${TREE_BRANCH} ${YELLOW}⚠️  Snyk not configured (skipping)${NC}"
+    log "Snyk check skipped - authentication required"
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Vulnerabilities detected" "$DURATION"
+
+    echo "  ${TREE_PIPE}"
+    echo "  ${TREE_PIPE} ${RED}Snyk output:${NC}"
+    echo "     ${GRAY}┌─────────────────────────────────────${NC}"
+    cat "$SNYK_OUTPUT" | head -20 | while IFS= read -r line; do
+        echo "     ${GRAY}│${NC} $line"
+    done
+    echo "     ${GRAY}└─────────────────────────────────────${NC}"
+
+    rm -f "$SNYK_OUTPUT"
+    step_end 1
+
     echo ""
-    echo "❌ Security checks failed! Push aborted."
-    echo "Review and fix security issues before pushing."
-    echo ""
-    echo "To skip this hook (not recommended):"
-    echo "  git push --no-verify"
-    echo ""
+    show_log_location
+    show_skip_hint
+
     exit 1
 fi
 
+rm -f "$SNYK_OUTPUT"
+
+# Check for unused dependencies
+echo "  ${TREE_PIPE}"
+substep_start "Checking for unused dependencies..."
+
+# Check Client App
+echo "  ${TREE_PIPE}"
+substep_nested "Checking Client App..."
+
+cd "$PWD/apps/client"
+CLIENT_DEPS=$(npx depcheck --json 2>&1)
+CLIENT_HAS_UNUSED=$(echo "$CLIENT_DEPS" | node -e "
+    let input = '';
+    process.stdin.on('data', chunk => input += chunk);
+    process.stdin.on('end', () => {
+        try {
+            const data = JSON.parse(input);
+            const deps = data.dependencies || [];
+            const devDeps = data.devDependencies || [];
+            if (deps.length > 0 || devDeps.length > 0) {
+                process.exit(1);
+            } else {
+                process.exit(0);
+            }
+        } catch (e) {
+            process.exit(0);
+        }
+    });
+" && echo "0" || echo "1")
+
+if [ "$CLIENT_HAS_UNUSED" = "0" ]; then
+    substep_nested "✅ No unused dependencies"
+else
+    substep_nested "⚠️  Unused dependencies detected"
+fi
+
+# Check API App
+cd "$PWD/../api"
+substep_nested "Checking API App..."
+
+API_DEPS=$(npx depcheck --json 2>&1)
+API_HAS_UNUSED=$(echo "$API_DEPS" | node -e "
+    let input = '';
+    process.stdin.on('data', chunk => input += chunk);
+    process.stdin.on('end', () => {
+        try {
+            const data = JSON.parse(input);
+            const deps = data.dependencies || [];
+            const devDeps = data.devDependencies || [];
+            if (deps.length > 0 || devDeps.length > 0) {
+                process.exit(1);
+            } else {
+                process.exit(0);
+            }
+        } catch (e) {
+            process.exit(0);
+        }
+    });
+" && echo "0" || echo "1")
+
+if [ "$API_HAS_UNUSED" = "0" ]; then
+    substep_nested "✅ No unused dependencies" 1
+else
+    substep_nested "⚠️  Unused dependencies detected" 1
+fi
+
+cd "$PWD/../.."
+
+# Fail if any unused deps found
+if [ "$CLIENT_HAS_UNUSED" = "1" ] || [ "$API_HAS_UNUSED" = "1" ]; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    echo ""
+    substep_end 1 "Unused dependencies found" "$DURATION" 1
+    step_end 1
+
+    echo ""
+    echo "  📋 To fix unused dependencies:"
+    echo "     1. Review the unused packages"
+    echo "     2. Remove them from package.json"
+    echo "     3. Run: npm install"
+    echo ""
+    show_log_location
+    show_skip_hint
+
+    exit 1
+fi
+
+DURATION=$(get_elapsed_time $STEP_TIME)
+substep_end 0 "All security checks passed" "$DURATION" 1
+step_end 0
+
+# ============================================================================
 # Step 2: Build client app
-echo ""
-echo "🏗️  Building client app..."
-echo ""
+# ============================================================================
 
-cd apps/client && npm run build
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "Building Client App" "🏗️"
 
-if [ $? -ne 0 ]; then
+STEP_TIME=$(date +%s)
+
+substep_start "Running: npm run build..."
+
+# Build client
+if capture_output "cd apps/client && npm run build"; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+
+    # Try to extract route count from Next.js output
+    ROUTE_COUNT=$(grep -o "Route (app)" "$TEMP_OUTPUT" 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+
+    if [ "$ROUTE_COUNT" -gt 0 ]; then
+        substep_end 0 "Build successful - ${ROUTE_COUNT} routes compiled" "$DURATION" 1
+    else
+        substep_end 0 "Build successful" "$DURATION" 1
+    fi
+
+    step_end 0
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Build failed" "$DURATION" 1
+    show_captured_output
+    step_end 1
+
     echo ""
-    echo "❌ Client build failed! Push aborted."
-    echo "Fix the build errors before pushing."
-    echo ""
-    echo "To skip this hook (not recommended):"
-    echo "  git push --no-verify"
-    echo ""
+    show_log_location
+    show_skip_hint
+
     exit 1
 fi
 
+# ============================================================================
 # Step 3: Build API app
-echo ""
-echo "🏗️  Building API app..."
-echo ""
+# ============================================================================
 
-cd ../api && npm run build
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "Building API App" "🏗️"
 
-if [ $? -ne 0 ]; then
+STEP_TIME=$(date +%s)
+
+substep_start "Running: npm run build..."
+
+# Build API
+if capture_output "cd apps/api && npm run build"; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 0 "TypeScript compilation successful" "$DURATION" 1
+    step_end 0
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Build failed" "$DURATION" 1
+    show_captured_output
+    step_end 1
+
     echo ""
-    echo "❌ API build failed! Push aborted."
-    echo "Fix the build errors before pushing."
-    echo ""
-    echo "To skip this hook (not recommended):"
-    echo "  git push --no-verify"
-    echo ""
+    show_log_location
+    show_skip_hint
+
     exit 1
 fi
 
-# Step 4: Run API e2e tests
-echo ""
-echo "🧪 Running API e2e tests..."
-echo ""
+# ============================================================================
+# Step 4: Run API E2E tests
+# ============================================================================
 
-npm run test:e2e
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "Running API E2E Tests" "🧪"
 
-if [ $? -ne 0 ]; then
+STEP_TIME=$(date +%s)
+
+substep_start "Running: npm run test:e2e..."
+
+# Run tests
+if capture_output "cd apps/api && npm run test:e2e"; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+
+    # Try to extract test count from output
+    TEST_COUNT=$(grep -o "Tests:.*passed" "$TEMP_OUTPUT" 2>/dev/null | grep -o "[0-9]*" | head -1 || echo "")
+
+    if [ -n "$TEST_COUNT" ]; then
+        substep_end 0 "${TEST_COUNT} tests passed" "$DURATION" 1
+    else
+        substep_end 0 "Tests passed" "$DURATION" 1
+    fi
+
+    step_end 0
+else
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    substep_end 1 "Tests failed" "$DURATION" 1
+    show_captured_output
+    step_end 1
+
     echo ""
-    echo "❌ API e2e tests failed! Push aborted."
-    echo "Fix the failing tests before pushing."
-    echo ""
-    echo "To skip this hook (not recommended):"
-    echo "  git push --no-verify"
-    echo ""
+    show_log_location
+    show_skip_hint
+
     exit 1
 fi
 
+# ============================================================================
+# Success!
+# ============================================================================
+
+TOTAL_TIME=$(get_elapsed_time $HOOK_START_TIME)
+print_footer "success" "All Pre-Push Checks Passed!" "$TOTAL_TIME"
+
+echo "${GREEN}🚀 Pushing to remote...${NC}"
 echo ""
-echo "✅ All checks passed! Pushing to remote..."
+
+exit 0

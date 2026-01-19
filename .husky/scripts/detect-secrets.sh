@@ -1,16 +1,13 @@
 #!/bin/sh
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-echo "${YELLOW}🔍 Scanning for secrets...${NC}"
+# Detect Secrets Script
+# Returns exit code 0 for no secrets, 1 for secrets found or not installed
+# Can be used standalone or with UI utils
 
 # Check if gitleaks is installed
 if ! command -v gitleaks >/dev/null 2>&1; then
-    echo "${RED}❌ Gitleaks is not installed!${NC}"
+    # Output error details
+    echo "Gitleaks is not installed!"
     echo ""
     echo "Please install Gitleaks to enable secrets detection:"
     echo ""
@@ -23,26 +20,19 @@ if ! command -v gitleaks >/dev/null 2>&1; then
     echo "  Windows:"
     echo "    # Download from: https://github.com/gitleaks/gitleaks/releases"
     echo "    # Or use: scoop install gitleaks"
-    echo ""
-    echo "Or skip secrets detection (not recommended):"
-    echo "  git commit --no-verify"
-    echo ""
+
     exit 1
 fi
 
 # Run gitleaks on staged files
-# --no-git: Don't use git to find files (we'll pass them explicitly)
-# --staged: Only scan staged changes
-# --config: Use our custom config
-# --verbose: Show more details
-# --redact: Hide actual secret values in output
-
-if gitleaks protect --staged --config=.gitleaks.toml --verbose --redact; then
-    echo "${GREEN}✅ No secrets detected${NC}"
+if gitleaks protect --staged --config=.gitleaks.toml --verbose --redact 2>&1; then
+    # Success - only output if standalone (no UI utils loaded)
+    if [ -z "$HUSKY_UI_LOADED" ]; then
+        echo "✅ No secrets detected"
+    fi
     exit 0
 else
-    echo ""
-    echo "${RED}❌ Secrets detected in your commit!${NC}"
+    # Secrets found - output error details
     echo ""
     echo "Please remove the secrets from your code and use environment variables instead."
     echo ""
@@ -50,6 +40,6 @@ else
     echo "  1. Update .gitleaks.toml to allowlist the pattern"
     echo "  2. Use 'gitleaks:allow' comment in your code"
     echo "  3. Skip this check (not recommended): git commit --no-verify"
-    echo ""
+
     exit 1
 fi
