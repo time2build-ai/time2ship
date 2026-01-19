@@ -10,7 +10,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().default('3001'),
   DB_HOST: z.string().default('localhost'),
-  DB_PORT: z.string().default('5432'),
+  DB_PORT: z.coerce.number().default(5432),
   DB_NAME: z.string().default('time2ship'),
   DB_USER: z.string().default('postgres'),
   DB_PASSWORD: z.string(),
@@ -20,7 +20,7 @@ const envSchema = z.object({
 
   // Email configuration
   EMAIL_HOST: z.string().default('smtp.gmail.com'),
-  EMAIL_PORT: z.string().default('587'),
+  EMAIL_PORT: z.coerce.number().default(587),
   EMAIL_SECURE: z.string().default('false'),
   EMAIL_USER: z.string().optional(),
   EMAIL_PASSWORD: z.string().optional(),
