@@ -11,7 +11,7 @@ import * as passwordResetSchema from '@/features/auth/schemas/password-reset.sch
  */
 const pool = new Pool({
   host: env.DB_HOST,
-  port: parseInt(env.DB_PORT),
+  port: env.DB_PORT,
   database: env.DB_NAME,
   user: env.DB_USER,
   password: env.DB_PASSWORD,

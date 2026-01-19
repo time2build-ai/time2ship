@@ -22,14 +22,15 @@ export class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: env.EMAIL_HOST,
-      port: parseInt(env.EMAIL_PORT, 10),
+      port: env.EMAIL_PORT,
       secure: env.EMAIL_SECURE === 'true',
-      auth: env.EMAIL_USER && env.EMAIL_PASSWORD
-        ? {
-            user: env.EMAIL_USER,
-            pass: env.EMAIL_PASSWORD,
-          }
-        : undefined,
+      auth:
+        env.EMAIL_USER && env.EMAIL_PASSWORD
+          ? {
+              user: env.EMAIL_USER,
+              pass: env.EMAIL_PASSWORD,
+            }
+          : undefined,
     });
   }
 
@@ -52,7 +53,10 @@ export class EmailService {
    * @param to - Recipient email address
    * @param data - Reset token and user information
    */
-  async sendPasswordResetEmail(to: string, data: { resetToken: string; email: string }): Promise<void> {
+  async sendPasswordResetEmail(
+    to: string,
+    data: { resetToken: string; email: string }
+  ): Promise<void> {
     const subject = 'Password Reset Request';
     const html = this.getPasswordResetTemplate(data);
 
@@ -65,7 +69,10 @@ export class EmailService {
    * @param to - Recipient email address
    * @param data - Verification token and user information
    */
-  async sendVerificationEmail(to: string, data: { verificationToken: string; email: string }): Promise<void> {
+  async sendVerificationEmail(
+    to: string,
+    data: { verificationToken: string; email: string }
+  ): Promise<void> {
     const subject = 'Verify Your Email Address';
     const html = this.getVerificationEmailTemplate(data);
 
@@ -121,14 +128,14 @@ export class EmailService {
 
       ${emailParagraph('Hi there,')}
 
-      ${emailParagraph('Thank you for registering with Time2Ship! Your account has been successfully created and you\'re ready to start building amazing things.')}
+      ${emailParagraph("Thank you for registering with Time2Ship! Your account has been successfully created and you're ready to start building amazing things.")}
 
       ${emailInfoBox(`
         <strong>Your Account:</strong><br />
         Email: ${data.email}
       `)}
 
-      ${emailParagraph('Here\'s what you can do next:')}
+      ${emailParagraph("Here's what you can do next:")}
 
       ${emailParagraph(`
         <strong>✓</strong> Complete your profile<br />
@@ -139,7 +146,7 @@ export class EmailService {
 
       ${emailButton('Get Started', `${env.CLIENT_URL || 'http://localhost:3000'}/dashboard`)}
 
-      ${emailParagraph('If you have any questions or need assistance, our support team is here to help. Just reply to this email and we\'ll get back to you as soon as possible.')}
+      ${emailParagraph("If you have any questions or need assistance, our support team is here to help. Just reply to this email and we'll get back to you as soon as possible.")}
 
       ${emailSignature()}
     `;
@@ -173,10 +180,13 @@ export class EmailService {
         </code>
       </div>
 
-      ${emailInfoBox(`
+      ${emailInfoBox(
+        `
         <strong>⚠️ Security Notice:</strong><br />
         If you didn't request this password reset, please ignore this email. Your password will remain unchanged.
-      `, { backgroundColor: '#fef2f2' })}
+      `,
+        { backgroundColor: '#fef2f2' }
+      )}
 
       ${emailParagraph('For security reasons, this code will expire in 15 minutes. If you need a new code, you can request another password reset.')}
 
@@ -218,7 +228,7 @@ export class EmailService {
 
       ${emailParagraph('This verification link will expire in 24 hours. If it expires, you can request a new verification email from your account settings.')}
 
-      ${emailParagraph('If you didn\'t create an account with Time2Ship, you can safely ignore this email.')}
+      ${emailParagraph("If you didn't create an account with Time2Ship, you can safely ignore this email.")}
 
       ${emailSignature()}
     `;
