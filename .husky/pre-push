@@ -185,7 +185,7 @@ STEP_TIME=$(date +%s)
 substep_start "Running: npm run build..."
 
 # Build client
-if capture_output "cd apps/client && npm run build"; then
+if capture_output "cd '$PROJECT_ROOT/apps/client' && npm run build"; then
     DURATION=$(get_elapsed_time $STEP_TIME)
 
     # Try to extract route count from Next.js output
@@ -223,7 +223,7 @@ STEP_TIME=$(date +%s)
 substep_start "Running: npm run build..."
 
 # Build API
-if capture_output "cd apps/api && npm run build"; then
+if capture_output "cd '$PROJECT_ROOT/apps/api' && npm run build"; then
     DURATION=$(get_elapsed_time $STEP_TIME)
     substep_end 0 "TypeScript compilation successful" "$DURATION" 1
     step_end 0
@@ -252,7 +252,7 @@ STEP_TIME=$(date +%s)
 substep_start "Running: npm run test:e2e..."
 
 # Run tests
-if capture_output "cd apps/api && npm run test:e2e"; then
+if capture_output "cd '$PROJECT_ROOT/apps/api' && npm run test:e2e"; then
     DURATION=$(get_elapsed_time $STEP_TIME)
 
     # Try to extract test count from output
