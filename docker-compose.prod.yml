@@ -19,6 +19,28 @@ services:
     networks:
       - time2ship-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: time2ship-redis-prod
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - time2ship-network
+    command: redis-server --appendonly yes
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   api:
     image: ${API_IMAGE:-your-dockerhub-username/time2ship-api:latest}
     container_name: time2ship-api-prod
@@ -39,10 +61,15 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      SENTRY_DSN: ${SENTRY_DSN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
     ports:
       - "${API_PORT:-3001}:3001"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test:
@@ -70,6 +97,10 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       API_URL: http://api:3001
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
+      SENTRY_DSN: ${SENTRY_DSN}
+      NEXT_PUBLIC_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
     ports:
       - "${CLIENT_PORT:-3000}:3000"
     depends_on:
@@ -84,6 +115,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   time2ship-network:

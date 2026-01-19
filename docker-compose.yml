@@ -17,6 +17,21 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: time2ship-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
   api:
     build:
       context: ./apps/api
@@ -33,6 +48,7 @@ services:
       DB_PASSWORD: postgres
       JWT_ACCESS_SECRET: your-32-character-secret-change-me-in-production
       JWT_REFRESH_SECRET: another-32-character-secret-change-me-too
+      REDIS_URL: redis://redis:6379
     ports:
       - "3001:3001"
     volumes:
@@ -40,6 +56,8 @@ services:
       - /app/node_modules
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test:
@@ -75,3 +93,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:

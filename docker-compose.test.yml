@@ -17,6 +17,18 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
 
+  redis-test:
+    image: redis:7-alpine
+    container_name: time2ship-redis-test
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   api-test:
     build:
       context: .
@@ -33,6 +45,7 @@ services:
       DB_PASSWORD: postgres
       JWT_ACCESS_SECRET: test-access-secret-for-e2e-testing-only
       JWT_REFRESH_SECRET: test-refresh-secret-for-e2e-testing-only
+      REDIS_URL: redis://redis-test:6379
     ports:
       - "3002:3001"
     volumes:
@@ -41,6 +54,8 @@ services:
       - /app/dist
     depends_on:
       db-test:
+        condition: service_healthy
+      redis-test:
         condition: service_healthy
     command: sh -c "npm run db:migrate && npm run test:e2e:local"
 

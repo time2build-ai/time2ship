@@ -20,7 +20,10 @@ export const initSentry = (): void => {
 
     // Profiling
     profilesSampleRate: env.NODE_ENV === 'production' ? 0.1 : 1.0,
-    integrations: [nodeProfilingIntegration()],
+    integrations: [
+      // @ts-expect-error - Type mismatch between @sentry/profiling-node and @sentry/node integration types
+      nodeProfilingIntegration(),
+    ],
 
     // Don't send errors in development unless explicitly configured
     enabled: env.NODE_ENV === 'production' || !!env.SENTRY_DSN,

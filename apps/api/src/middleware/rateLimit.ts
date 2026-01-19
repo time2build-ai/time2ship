@@ -2,7 +2,7 @@ import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { Redis } from 'ioredis';
 import { env } from '../config/env';
-import { AppError } from '../common/errors/AppError';
+import { AppError } from '../common/utils/errors';
 
 // Redis client for distributed rate limiting (optional)
 const redis = env.REDIS_URL ? new Redis(env.REDIS_URL) : undefined;
@@ -37,7 +37,7 @@ const createRateLimiter = (options: {
     skipFailedRequests: options.skipFailedRequests,
 
     // Customize error response
-    handler: (req, res) => {
+    handler: (_req, _res) => {
       throw new AppError(
         options.message || 'Too many requests, please try again later',
         429, // Too Many Requests
@@ -115,7 +115,7 @@ export const createUserRateLimit = (options: {
         })
       : undefined,
 
-    handler: (req, res) => {
+    handler: (_req, _res) => {
       throw new AppError(options.message || 'Rate limit exceeded', 429, 'RATE_LIMIT_EXCEEDED');
     },
   });
