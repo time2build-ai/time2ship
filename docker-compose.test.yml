@@ -1,5 +1,4 @@
 services:
-  # Test PostgreSQL Database
   db-test:
     image: postgres:16-alpine
     container_name: time2ship-db-test
@@ -9,21 +8,20 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: time2ship_test
     ports:
-      - "5433:5432"  # Different port to avoid conflicts with dev DB
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 5
     tmpfs:
-      - /var/lib/postgresql/data  # Use tmpfs for faster tests and no persistence
+      - /var/lib/postgresql/data
 
-  # API Service for Testing
   api-test:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-      target: builder  # Use builder stage for testing
+      target: builder
     container_name: time2ship-api-test
     environment:
       NODE_ENV: test
@@ -36,7 +34,7 @@ services:
       JWT_ACCESS_SECRET: test-access-secret-for-e2e-testing-only
       JWT_REFRESH_SECRET: test-refresh-secret-for-e2e-testing-only
     ports:
-      - "3002:3001"  # Different port to avoid conflicts with dev API
+      - "3002:3001"
     volumes:
       - ./apps/api:/app
       - /app/node_modules
