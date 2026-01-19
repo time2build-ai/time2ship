@@ -3,16 +3,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy root package files (context is repo root)
 COPY package*.json ./
 
-# Install dependencies
+# Install all workspace dependencies
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy API source code
+COPY apps/api ./apps/api
 
 # Build TypeScript
+WORKDIR /app/apps/api
 RUN npm run build
 
 # Production stage
@@ -20,14 +21,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy root package files
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --production
+RUN npm ci --production --workspace=api
 
 # Copy built application from builder
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/apps/api/dist ./dist
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \

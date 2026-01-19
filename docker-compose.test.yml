@@ -19,8 +19,8 @@ services:
 
   api-test:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./apps/api/Dockerfile
       target: builder
     container_name: time2ship-api-test
     environment:
