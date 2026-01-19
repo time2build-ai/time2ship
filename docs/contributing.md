@@ -306,4 +306,3 @@ Thank you for contributing to Time2Ship! 🚀
 - [Getting Started](getting-started.md) - Development setup
 - [Testing](testing.md) - Testing guide
 - [Architecture](architecture.md) - System architecture
-- [Husky Configuration](HUSKY.md) - Git hooks details

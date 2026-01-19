@@ -242,7 +242,7 @@ Tests run automatically on:
 - **Pre-push** - Full test suite (via Husky)
 - **Pull Requests** - CI pipeline (GitHub Actions)
 
-See [docs/HUSKY.md](HUSKY.md) for Git hooks configuration.
+See [Contributing Guide](contributing.md) for Git hooks configuration.
 
 ## Related Documentation
 
