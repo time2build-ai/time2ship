@@ -1,0 +1,49 @@
+# Gitleaks configuration for Time2Ship
+# https://github.com/gitleaks/gitleaks
+
+title = "Time2Ship Gitleaks Configuration"
+
+[extend]
+# Use the default Gitleaks rules as a base
+useDefault = true
+
+# Allowlist specific patterns that are false positives
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+  '''\.env$''',
+  '''\.env\.local$''',
+  '''\.example$''',
+  '''\.sample$''',
+  '''\.template$''',
+  '''/examples/''',
+  '''/fixtures/''',
+  '''\.md$''',
+  '''\.mdx$''',
+  '''gitleaks\.toml$''',
+]
+regexes = [
+  '''(test|mock|fake|dummy)[-_]?(secret|key|token|password)''',
+]
+
+# Custom rules specific to your stack
+[[rules]]
+id = "nextauth-secret"
+description = "NextAuth.js secret detected"
+regex = '''NEXTAUTH_SECRET\s*=\s*["\']?[a-zA-Z0-9+/=]{32,}["\']?'''
+tags = ["nextauth", "secret"]
+[[rules.Entropies]]
+Min = "3.5"
+Max = "8"
+
+[[rules]]
+id = "supabase-anon-key"
+description = "Supabase anon key (public key - not sensitive but should use env var)"
+regex = '''NEXT_PUBLIC_SUPABASE_ANON_KEY\s*=\s*["\']?(eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)["\']?'''
+tags = ["supabase", "key"]
+
+[[rules]]
+id = "supabase-service-role"
+description = "Supabase service role key detected (sensitive!)"
+regex = '''SUPABASE_SERVICE_ROLE_KEY\s*=\s*["\']?(eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)["\']?'''
+tags = ["supabase", "secret", "service-role"]

@@ -94,11 +94,37 @@ npm test
 The project uses **Husky** to run automated checks before commits:
 
 **Checks that run:**
+- 🌿 **Branch Name Validation** - Ensures branch names follow conventions
+- 🔐 **Secrets Detection** - Scans for exposed secrets using Gitleaks
 - 🔍 **Linting** - ESLint on staged files
 - ✅ **Type Checking** - TypeScript compilation check
 - 📝 **Formatting** - Ensure code style consistency
 
 If any check fails, the commit is blocked. Fix the issues and try again.
+
+#### Secrets Detection
+
+Gitleaks automatically scans your staged changes for exposed secrets like:
+- API keys and tokens
+- Database credentials
+- JWT secrets
+- Private keys
+- OAuth tokens
+
+**Installation Required:**
+
+```bash
+# macOS
+brew install gitleaks
+
+# Linux
+# Download from: https://github.com/gitleaks/gitleaks/releases
+
+# Windows
+scoop install gitleaks
+```
+
+**Configuration:** The [.gitleaks.toml](.gitleaks.toml) file controls what is detected and what is allowed.
 
 ### Pre-push Hooks
 
