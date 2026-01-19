@@ -67,9 +67,11 @@ Thumbs.db
 apps/client/.next/
 apps/client/out/
 apps/client/*.tsbuildinfo
+next-env.d.ts
 
 # Documentation plans (temporary planning files)
 docs/plans/
+docs/plans/*.md
 *.plan.md
 
 # Temporary files
