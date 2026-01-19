@@ -4,7 +4,11 @@
     "tailwindcss",
     "@types/node",
     "@types/react",
-    "@types/react-dom"
+    "@types/react-dom",
+    "@testing-library/user-event",
+    "@types/jest",
+    "jest-environment-jsdom",
+    "ts-node"
   ],
   "skip-missing": true
 }
