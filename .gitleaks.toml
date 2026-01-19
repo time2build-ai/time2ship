@@ -1,5 +1,48 @@
-# Gitleaks configuration for Time2Ship
+# ============================================================================
+# Gitleaks Configuration for Time2Ship
 # https://github.com/gitleaks/gitleaks
+# ============================================================================
+#
+# This configuration detects exposed secrets and API keys in your codebase.
+#
+# DETECTED SECRETS:
+# - OpenAI API Keys (sk-*)
+# - Anthropic/Claude API Keys (sk-ant-*)
+# - Stripe Keys (sk_live_*, sk_test_*, rk_*)
+# - AWS Credentials (AKIA*, access keys, secret keys)
+# - GitHub Tokens (ghp_*, gho_*, ghs_*, ghu_*, ghr_*)
+# - Google API Keys (AIza*)
+# - SendGrid API Keys (SG.*)
+# - Twilio API Keys (SK*)
+# - Slack Tokens & Webhooks (xox*, hooks.slack.com)
+# - Mailgun, PayPal, Square, Shopify tokens
+# - Heroku API Keys
+# - Firebase API Keys
+# - Cloudinary URLs with credentials
+# - MongoDB connection strings with credentials
+# - PostgreSQL/MySQL database URLs with passwords
+# - Redis URLs with passwords
+# - JWT Secrets
+# - Private Keys (RSA, EC, DSA, OpenSSH)
+# - NextAuth.js secrets
+# - Supabase Service Role Keys
+# - Generic API keys and OAuth client secrets
+# - High entropy strings (potential unknown secrets)
+#
+# ALLOWLISTED (False Positives):
+# - .env and .env.local files (git-ignored anyway)
+# - .example, .sample, .template files
+# - Test files (*.test.*, *.spec.*, __tests__/)
+# - Documentation files (*.md, *.mdx)
+# - Build directories (dist/, build/, node_modules/)
+# - Test/mock/dummy/example secrets in test files
+#
+# USAGE:
+# - Runs automatically on pre-commit via Husky
+# - To test: gitleaks detect --config=.gitleaks.toml --verbose
+# - To scan specific file: gitleaks detect --source=path/to/file
+#
+# ============================================================================
 
 title = "Time2Ship Gitleaks Configuration"
 
@@ -18,32 +61,319 @@ paths = [
   '''\.template$''',
   '''/examples/''',
   '''/fixtures/''',
+  '''/dist/''',
+  '''/build/''',
+  '''\.next/''',
+  '''/coverage/''',
+  '''/node_modules/''',
+  '''\.test\.(ts|tsx|js|jsx)$''',
+  '''\.spec\.(ts|tsx|js|jsx)$''',
+  '''__tests__/''',
   '''\.md$''',
   '''\.mdx$''',
+  '''package-lock\.json$''',
+  '''yarn\.lock$''',
+  '''pnpm-lock\.yaml$''',
   '''gitleaks\.toml$''',
 ]
 regexes = [
-  '''(test|mock|fake|dummy)[-_]?(secret|key|token|password)''',
+  '''(test|mock|fake|dummy|example)[-_]?(secret|key|token|password|api)''',
+  '''sk-test-[a-zA-Z0-9]+''',
+  '''verification(Token)?[0-9]{1,4}''',
 ]
 
-# Custom rules specific to your stack
+# ============================================================================
+# CUSTOM RULES - API Keys, Secrets, and Credentials
+# ============================================================================
+
+# OpenAI API Keys
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key detected"
+regex = '''sk-[a-zA-Z0-9]{20,}T3BlbkFJ[a-zA-Z0-9]{20,}'''
+secretGroup = 0
+tags = ["openai", "api-key", "secret"]
+
+[[rules]]
+id = "openai-api-key-simple"
+description = "OpenAI API Key (simple pattern)"
+regex = '''sk-[a-zA-Z0-9]{32,}'''
+secretGroup = 0
+tags = ["openai", "api-key", "secret"]
+
+# Anthropic/Claude API Keys
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic/Claude API Key detected"
+regex = '''sk-ant-api03-[a-zA-Z0-9\-_]{95,}'''
+secretGroup = 0
+tags = ["anthropic", "claude", "api-key", "secret"]
+
+# Stripe API Keys
+[[rules]]
+id = "stripe-secret-key"
+description = "Stripe Secret Key detected"
+regex = '''sk_(live|test)_[0-9a-zA-Z]{24,}'''
+secretGroup = 0
+tags = ["stripe", "api-key", "secret"]
+
+[[rules]]
+id = "stripe-restricted-key"
+description = "Stripe Restricted Key detected"
+regex = '''rk_(live|test)_[0-9a-zA-Z]{24,}'''
+secretGroup = 0
+tags = ["stripe", "api-key", "secret"]
+
+# AWS Keys
+[[rules]]
+id = "aws-access-key-id"
+description = "AWS Access Key ID detected"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+secretGroup = 0
+tags = ["aws", "access-key", "secret"]
+
+[[rules]]
+id = "aws-secret-access-key"
+description = "AWS Secret Access Key detected"
+regex = '''(?i)aws(.{0,20})?['\"][0-9a-zA-Z\/+]{40}['\"]'''
+secretGroup = 0
+tags = ["aws", "secret-key", "secret"]
+
+# GitHub Tokens
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token detected"
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+secretGroup = 0
+tags = ["github", "token", "secret"]
+
+[[rules]]
+id = "github-oauth"
+description = "GitHub OAuth Token detected"
+regex = '''gho_[0-9a-zA-Z]{36}'''
+secretGroup = 0
+tags = ["github", "oauth", "secret"]
+
+[[rules]]
+id = "github-app-token"
+description = "GitHub App Token detected"
+regex = '''(ghu|ghs)_[0-9a-zA-Z]{36}'''
+secretGroup = 0
+tags = ["github", "token", "secret"]
+
+[[rules]]
+id = "github-refresh-token"
+description = "GitHub Refresh Token detected"
+regex = '''ghr_[0-9a-zA-Z]{76}'''
+secretGroup = 0
+tags = ["github", "token", "secret"]
+
+# Google API Keys
+[[rules]]
+id = "google-api-key"
+description = "Google API Key detected"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+secretGroup = 0
+tags = ["google", "api-key", "secret"]
+
+[[rules]]
+id = "google-oauth-id"
+description = "Google OAuth Client ID detected"
+regex = '''[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com'''
+secretGroup = 0
+tags = ["google", "oauth", "client-id"]
+
+# SendGrid API Keys
+[[rules]]
+id = "sendgrid-api-key"
+description = "SendGrid API Key detected"
+regex = '''SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}'''
+secretGroup = 0
+tags = ["sendgrid", "api-key", "secret"]
+
+# Twilio API Keys
+[[rules]]
+id = "twilio-api-key"
+description = "Twilio API Key detected"
+regex = '''SK[a-z0-9]{32}'''
+secretGroup = 0
+tags = ["twilio", "api-key", "secret"]
+
+# Slack Tokens
+[[rules]]
+id = "slack-token"
+description = "Slack Token detected"
+regex = '''xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24,}'''
+secretGroup = 0
+tags = ["slack", "token", "secret"]
+
+[[rules]]
+id = "slack-webhook"
+description = "Slack Webhook URL detected"
+regex = '''https://hooks\.slack\.com/services/T[a-zA-Z0-9_]+/B[a-zA-Z0-9_]+/[a-zA-Z0-9_]+'''
+secretGroup = 0
+tags = ["slack", "webhook", "secret"]
+
+# Mailgun API Keys
+[[rules]]
+id = "mailgun-api-key"
+description = "Mailgun API Key detected"
+regex = '''key-[0-9a-zA-Z]{32}'''
+secretGroup = 0
+tags = ["mailgun", "api-key", "secret"]
+
+# PayPal/Braintree
+[[rules]]
+id = "paypal-braintree-token"
+description = "PayPal/Braintree Access Token detected"
+regex = '''access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32}'''
+secretGroup = 0
+tags = ["paypal", "braintree", "token", "secret"]
+
+# Square API Keys
+[[rules]]
+id = "square-access-token"
+description = "Square Access Token detected"
+regex = '''sq0atp-[0-9A-Za-z\-_]{22}'''
+secretGroup = 0
+tags = ["square", "token", "secret"]
+
+[[rules]]
+id = "square-oauth-secret"
+description = "Square OAuth Secret detected"
+regex = '''sq0csp-[0-9A-Za-z\-_]{43}'''
+secretGroup = 0
+tags = ["square", "oauth", "secret"]
+
+# Shopify
+[[rules]]
+id = "shopify-token"
+description = "Shopify Access Token detected"
+regex = '''shpat_[a-fA-F0-9]{32}'''
+secretGroup = 0
+tags = ["shopify", "token", "secret"]
+
+[[rules]]
+id = "shopify-private-app"
+description = "Shopify Private App Password detected"
+regex = '''shppa_[a-fA-F0-9]{32}'''
+secretGroup = 0
+tags = ["shopify", "password", "secret"]
+
+# Heroku API Keys
+[[rules]]
+id = "heroku-api-key"
+description = "Heroku API Key detected"
+regex = '''[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'''
+secretGroup = 0
+tags = ["heroku", "api-key", "secret"]
+
+# Firebase
+[[rules]]
+id = "firebase-api-key"
+description = "Firebase API Key detected"
+regex = '''AIza[0-9A-Za-z\\-_]{35}'''
+secretGroup = 0
+tags = ["firebase", "api-key", "secret"]
+
+# Cloudinary
+[[rules]]
+id = "cloudinary-url"
+description = "Cloudinary URL with credentials detected"
+regex = '''cloudinary://[0-9]+:[a-zA-Z0-9_-]+@[a-zA-Z0-9-]+'''
+secretGroup = 0
+tags = ["cloudinary", "credentials", "secret"]
+
+# MongoDB
+[[rules]]
+id = "mongodb-connection-string"
+description = "MongoDB connection string with credentials detected"
+regex = '''mongodb(\+srv)?://[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+@[a-zA-Z0-9.-]+'''
+secretGroup = 0
+tags = ["mongodb", "connection-string", "secret"]
+
+# PostgreSQL/Database URLs
+[[rules]]
+id = "database-url-with-password"
+description = "Database URL with password detected"
+regex = '''(postgres|postgresql|mysql|mariadb)://[a-zA-Z0-9_-]+:[^@\s]+@[a-zA-Z0-9.-]+'''
+secretGroup = 0
+tags = ["database", "connection-string", "secret"]
+
+# Redis URLs
+[[rules]]
+id = "redis-url-with-password"
+description = "Redis URL with password detected"
+regex = '''redis://[a-zA-Z0-9_-]+:[^@\s]+@[a-zA-Z0-9.-]+'''
+secretGroup = 0
+tags = ["redis", "connection-string", "secret"]
+
+# JWT Secrets (generic high-entropy strings)
+[[rules]]
+id = "jwt-secret"
+description = "JWT Secret detected"
+regex = '''(?i)(jwt_secret|jwt_key|access_secret|refresh_secret|token_secret)\s*[:=]\s*["\']([a-zA-Z0-9+/=]{32,})["\']'''
+secretGroup = 2
+tags = ["jwt", "secret"]
+[[rules.Entropies]]
+Min = "4.5"
+Max = "8"
+
+# Private Keys
+[[rules]]
+id = "private-key"
+description = "Private Key detected"
+regex = '''-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'''
+secretGroup = 0
+tags = ["private-key", "secret"]
+
+# NextAuth.js specific
 [[rules]]
 id = "nextauth-secret"
 description = "NextAuth.js secret detected"
 regex = '''NEXTAUTH_SECRET\s*=\s*["\']?[a-zA-Z0-9+/=]{32,}["\']?'''
 tags = ["nextauth", "secret"]
 [[rules.Entropies]]
+Min = "4.0"
+Max = "8"
+
+# Supabase
+[[rules]]
+id = "supabase-service-role"
+description = "Supabase Service Role Key detected (CRITICAL!)"
+regex = '''(SUPABASE_SERVICE_ROLE_KEY|supabase.*service.*role)\s*[:=]\s*["\']?(eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)["\']?'''
+secretGroup = 2
+tags = ["supabase", "service-role", "secret", "critical"]
+
+# API Keys with common prefixes
+[[rules]]
+id = "api-key-generic"
+description = "Generic API Key pattern detected"
+regex = '''(?i)(api[_-]?key|apikey|api[_-]?secret)\s*[:=]\s*["\']([a-zA-Z0-9_\-]{20,})["\']'''
+secretGroup = 2
+tags = ["api-key", "secret"]
+[[rules.Entropies]]
 Min = "3.5"
 Max = "8"
 
+# OAuth Client Secrets
 [[rules]]
-id = "supabase-anon-key"
-description = "Supabase anon key (public key - not sensitive but should use env var)"
-regex = '''NEXT_PUBLIC_SUPABASE_ANON_KEY\s*=\s*["\']?(eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)["\']?'''
-tags = ["supabase", "key"]
+id = "oauth-client-secret"
+description = "OAuth Client Secret detected"
+regex = '''(?i)(client[_-]?secret|oauth[_-]?secret)\s*[:=]\s*["\']([a-zA-Z0-9_\-]{20,})["\']'''
+secretGroup = 2
+tags = ["oauth", "client-secret", "secret"]
+[[rules.Entropies]]
+Min = "3.5"
+Max = "8"
 
+# Generic High Entropy Strings (catches unknown secrets)
 [[rules]]
-id = "supabase-service-role"
-description = "Supabase service role key detected (sensitive!)"
-regex = '''SUPABASE_SERVICE_ROLE_KEY\s*=\s*["\']?(eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)["\']?'''
-tags = ["supabase", "secret", "service-role"]
+id = "high-entropy-string"
+description = "High entropy string detected (potential secret)"
+regex = '''(?i)(password|passwd|pwd|secret|token|key)\s*[:=]\s*["\']([a-zA-Z0-9+/=_\-]{32,})["\']'''
+secretGroup = 2
+tags = ["high-entropy", "secret"]
+[[rules.Entropies]]
+Min = "4.0"
+Max = "8"
