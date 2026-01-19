@@ -236,9 +236,49 @@ npm run db:seed
 
 ## CI/CD Pipeline
 
-### GitHub Actions Example
+### Dokploy Deployment (Included)
 
-Create `.github/workflows/deploy.yml`:
+Time2Ship includes a pre-configured GitHub Actions workflow (`.github/workflows/deploy.yml`) for automatic deployment to Dokploy via webhook.
+
+**How it works:**
+1. Push to `production` branch triggers the workflow
+2. Builds Docker images for API and Client
+3. Pushes images to Docker Hub
+4. Triggers Dokploy webhook for automatic deployment
+
+**Required GitHub Secrets:**
+
+| Secret | Description |
+|--------|-------------|
+| `DOCKERHUB_USERNAME` | Your Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
+| `DOCKERHUB_API_IMAGE` | Docker Hub image name for API (e.g., `username/time2ship-api`) |
+| `DOCKERHUB_CLIENT_IMAGE` | Docker Hub image name for Client (e.g., `username/time2ship-client`) |
+| `DOKPLOY_WEBHOOK_URL` | Your Dokploy deployment webhook URL |
+
+**Setup Steps:**
+
+1. **Configure GitHub Secrets**
+   - Go to your repository Settings > Secrets and variables > Actions
+   - Add all required secrets listed above
+
+2. **Create Dokploy Application**
+   - Set up your application in Dokploy
+   - Configure it to pull from Docker Hub
+   - Copy the deployment webhook URL
+
+3. **Deploy**
+   - Push to `production` branch
+   - GitHub Actions builds and pushes Docker images
+   - Dokploy automatically pulls and deploys new images
+
+**Workflow File:** `.github/workflows/deploy.yml`
+
+**Manual Trigger:** You can also manually trigger deployment from the Actions tab
+
+### Custom GitHub Actions Example
+
+If not using Dokploy, here's a basic template:
 
 ```yaml
 name: Deploy

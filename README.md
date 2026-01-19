@@ -65,6 +65,48 @@ Time2Ship is a production-ready monorepo boilerplate that eliminates weeks of se
 
 ---
 
+## ⚙️ Environment Variables
+
+Time2Ship requires configuration for both API and Client applications. See [complete setup guide](docs/getting-started.md#environment-variables).
+
+### API (apps/api/.env)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NODE_ENV` | Yes | Environment (`development`/`production`) |
+| `PORT` | Yes | API port (default: `3001`) |
+| `DB_HOST` | Yes | PostgreSQL host |
+| `DB_PORT` | Yes | PostgreSQL port (default: `5432`) |
+| `DB_NAME` | Yes | Database name |
+| `DB_USER` | Yes | Database username |
+| `DB_PASSWORD` | Yes | Database password |
+| `JWT_ACCESS_SECRET` | Yes | JWT access token secret (generate with `openssl rand -base64 32`) |
+| `JWT_REFRESH_SECRET` | Yes | JWT refresh token secret (generate with `openssl rand -base64 32`) |
+| `CLIENT_URL` | Yes | Frontend URL (e.g., `http://localhost:3000`) |
+| `EMAIL_HOST` | Optional | SMTP host for emails |
+| `EMAIL_PORT` | Optional | SMTP port |
+| `EMAIL_USER` | Optional | SMTP username |
+| `EMAIL_PASSWORD` | Optional | SMTP password |
+| `EMAIL_FROM` | Optional | Email sender address |
+
+### Client (apps/client/.env)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Yes | API URL for browser requests (e.g., `http://localhost:3001`) |
+| `API_URL` | Optional | API URL for server-side requests (Docker: `http://api:3001`) |
+
+**Quick Setup:**
+```bash
+# API
+cd apps/api && cp .env.example .env
+
+# Client
+cd apps/client && cp .env.example .env
+```
+
+---
+
 ## 📚 Documentation
 
 Comprehensive guides for every aspect of Time2Ship:
@@ -78,7 +120,7 @@ Comprehensive guides for every aspect of Time2Ship:
 - [**Testing**](docs/testing.md) - Unit tests, E2E tests, best practices
 
 ### Deployment & Contributing
-- [**Deployment**](docs/deployment.md) - Production builds, Docker, platform guides
+- [**Deployment**](docs/deployment.md) - Production builds, Docker, platform guides (includes Dokploy)
 - [**Contributing**](docs/contributing.md) - Development workflow, code standards, PRs
 
 ---
