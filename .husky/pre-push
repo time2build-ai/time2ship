@@ -26,7 +26,7 @@ COMMIT_COUNT=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo "0")
 echo "  ${BLUE}📊 Detected ${COMMIT_COUNT} new commit(s) to push${NC}"
 echo ""
 
-TOTAL_STEPS=4
+TOTAL_STEPS=5
 CURRENT_STEP=0
 
 # ============================================================================
@@ -174,7 +174,86 @@ substep_end 0 "All security checks passed" "$DURATION" 1
 step_end 0
 
 # ============================================================================
-# Step 2: Build client app
+# Step 2: React Doctor - Code Health Check
+# ============================================================================
+
+CURRENT_STEP=$((CURRENT_STEP + 1))
+step_start $CURRENT_STEP $TOTAL_STEPS "React Doctor Analysis" "🩺"
+
+STEP_TIME=$(date +%s)
+
+substep_start "Scanning client app for React issues..."
+
+# Create a temp file for react-doctor output
+RD_OUTPUT=$(mktemp)
+
+# Run react-doctor on changed files only (diff against upstream)
+cd "$PROJECT_ROOT/apps/client"
+if npx -y react-doctor@latest . --diff @{u} --verbose > "$RD_OUTPUT" 2>&1; then
+    RD_RESULT=0
+    log "$(cat "$RD_OUTPUT")"
+else
+    RD_RESULT=$?
+    log "$(cat "$RD_OUTPUT")"
+fi
+
+# Extract the score from output
+RD_SCORE=$(grep -oE '[0-9]+/100' "$RD_OUTPUT" 2>/dev/null | head -1 | grep -oE '^[0-9]+' || echo "")
+
+cd "$PROJECT_ROOT"
+
+if [ $RD_RESULT -eq 0 ]; then
+    DURATION=$(get_elapsed_time $STEP_TIME)
+    if [ -n "$RD_SCORE" ]; then
+        substep_end 0 "Health score: ${RD_SCORE}/100" "$DURATION" 1
+    else
+        substep_end 0 "Analysis passed" "$DURATION" 1
+    fi
+    step_end 0
+else
+    # Check if score is below threshold (50 = Critical)
+    if [ -n "$RD_SCORE" ] && [ "$RD_SCORE" -ge 50 ] 2>/dev/null; then
+        DURATION=$(get_elapsed_time $STEP_TIME)
+        echo "  ${TREE_BRANCH} ${YELLOW}⚠️  Health score: ${RD_SCORE}/100 (needs work)${NC}"
+        log "React Doctor passed with warnings - score: ${RD_SCORE}/100"
+        substep_end 0 "Passed with warnings (score: ${RD_SCORE}/100)" "$DURATION" 1
+        step_end 0
+    else
+        DURATION=$(get_elapsed_time $STEP_TIME)
+        if [ -n "$RD_SCORE" ]; then
+            substep_end 1 "Health score: ${RD_SCORE}/100 (critical)" "$DURATION" 1
+        else
+            substep_end 1 "Analysis failed" "$DURATION" 1
+        fi
+
+        echo "  ${TREE_PIPE}"
+        echo "  ${TREE_PIPE} ${RED}React Doctor output:${NC}"
+        echo "     ${GRAY}┌─────────────────────────────────────${NC}"
+        cat "$RD_OUTPUT" | head -30 | while IFS= read -r line; do
+            echo "     ${GRAY}│${NC} $line"
+        done
+        echo "     ${GRAY}└─────────────────────────────────────${NC}"
+
+        rm -f "$RD_OUTPUT"
+        step_end 1
+
+        echo ""
+        echo "  📋 To fix React Doctor issues:"
+        echo "     1. Run: npx react-doctor@latest ./apps/client --verbose"
+        echo "     2. Fix the reported issues"
+        echo "     3. Aim for a score of 50+ to pass"
+        echo ""
+        show_log_location
+        show_skip_hint
+
+        exit 1
+    fi
+fi
+
+rm -f "$RD_OUTPUT"
+
+# ============================================================================
+# Step 3: Build client app
 # ============================================================================
 
 CURRENT_STEP=$((CURRENT_STEP + 1))
@@ -212,7 +291,7 @@ else
 fi
 
 # ============================================================================
-# Step 3: Build API app
+# Step 4: Build API app
 # ============================================================================
 
 CURRENT_STEP=$((CURRENT_STEP + 1))
@@ -241,7 +320,7 @@ else
 fi
 
 # ============================================================================
-# Step 4: Run API E2E tests
+# Step 5: Run API E2E tests
 # ============================================================================
 
 CURRENT_STEP=$((CURRENT_STEP + 1))
